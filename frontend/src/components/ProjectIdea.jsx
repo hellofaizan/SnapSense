@@ -43,7 +43,7 @@ export default function ProjectIdea() {
         <Stagger className="mt-14 grid gap-5 md:grid-cols-3 md:gap-6">
           {pillars.map((item) => (
             <StaggerItem key={item.title}>
-              <article className="h-full rounded-2xl border border-white/10 bg-neutral-950/70 p-6 ring-1 ring-white/5">
+              <article className="h-full rounded-2xl border border-white/15 bg-neutral-900/65 p-6 ring-1 ring-white/10">
                 <div className={`mb-5 inline-flex rounded-lg p-2.5 ring-1 ${item.accent}`}>
                   <item.icon className="h-5 w-5" strokeWidth={1.6} />
                 </div>

@@ -41,7 +41,7 @@ export default function PreFooter() {
           </p>
         </ScrollReveal>
         <ScrollReveal className="mx-auto mt-12 max-w-2xl md:mt-14" delay={0.06}>
-          <ul className="divide-y divide-white/10 rounded-2xl border border-white/10 bg-neutral-950/50 px-5 py-2 md:px-8">
+          <ul className="divide-y divide-white/15 rounded-2xl border border-white/15 bg-neutral-900/55 px-5 py-2 md:px-8">
             {faqs.map((item) => (
               <li key={item.q} className="py-6 first:pt-5 last:pb-5">
                 <p className="text-[15px] font-semibold text-neutral-200">{item.q}</p>

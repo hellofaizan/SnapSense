@@ -8,28 +8,28 @@ const steps = [
     title: 'Press shortcut',
     desc: 'Trigger SnapSense from anywhere with the global shortcut (Win/Alt/S in the current build).',
     icon: Keyboard,
-    ring: 'border-blue-500/35 bg-black',
+    ring: 'border-blue-500/35 bg-neutral-900/85',
     iconColor: 'text-blue-300',
   },
   {
     title: 'Snip screen',
     desc: 'Freeze the desktop and drag to select the exact region you care about.',
     icon: MousePointer2,
-    ring: 'border-violet-500/35 bg-black',
+    ring: 'border-violet-500/35 bg-neutral-900/85',
     iconColor: 'text-violet-300',
   },
   {
     title: 'Choose mode',
     desc: 'Pick AI, Text, or Lens from the floating mode strip before opening results.',
     icon: LayoutPanelTop,
-    ring: 'border-indigo-500/35 bg-black',
+    ring: 'border-indigo-500/35 bg-neutral-900/85',
     iconColor: 'text-indigo-300',
   },
   {
     title: 'Get output',
     desc: 'Review the result in a focused side panel, then iterate with follow-up prompts if needed.',
     icon: Sparkles,
-    ring: 'border-teal-500/35 bg-black',
+    ring: 'border-teal-500/35 bg-neutral-900/85',
     iconColor: 'text-teal-300',
   },
 ]
@@ -87,11 +87,11 @@ export default function HowItWorks() {
           </Stagger>
         </div>
 
-        <ScrollReveal className="mt-16 rounded-2xl border border-white/10 bg-neutral-950/70 p-6 md:p-8" delay={0.08}>
+        <ScrollReveal className="mt-16 rounded-2xl border border-white/15 bg-neutral-900/65 p-6 md:p-8" delay={0.08}>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">What each mode does</p>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             {modeDetails.map((item) => (
-              <div key={item.mode} className="rounded-xl border border-white/10 bg-black/40 p-4">
+              <div key={item.mode} className="rounded-xl border border-white/15 bg-white/5 p-4">
                 <p className="text-[14px] font-semibold text-neutral-200">{item.mode}</p>
                 <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">{item.detail}</p>
               </div>

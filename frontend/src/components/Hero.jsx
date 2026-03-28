@@ -17,12 +17,12 @@ export default function Hero() {
   return (
     <>
       <section
-        className="relative isolate flex min-h-[calc(100svh-5.5rem)] flex-col overflow-hidden bg-black pb-12 pt-28 md:min-h-[calc(100svh-6rem)] md:pb-20 md:pt-36 lg:pb-24 lg:pt-40"
+        className="relative isolate flex min-h-[calc(100svh-5.5rem)] flex-col overflow-hidden bg-neutral-950 pb-12 pt-28 md:min-h-[calc(100svh-6rem)] md:pb-20 md:pt-36 lg:pb-24 lg:pt-40"
         aria-labelledby="hero-heading"
       >
         <div className="pointer-events-none absolute inset-0 select-none" aria-hidden>
           {/* Slight lift from pure #000 so the field has depth */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_92%_70%_at_50%_32%,rgb(12_12_14)_0%,#000_68%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_92%_70%_at_50%_32%,rgb(28_28_34)_0%,rgb(12_12_16)_68%)]" />
           {/* Large soft blooms — read clearly on real displays */}
           <div className="absolute left-1/2 top-[8%] h-[min(58vh,520px)] w-[min(118vw,920px)] -translate-x-1/2 rounded-[50%] bg-blue-500/18 blur-[100px]" />
           <div className="absolute -right-[8%] top-[14%] h-[min(42vh,400px)] w-[min(42vh,400px)] rounded-full bg-sky-400/12 blur-[90px]" />
@@ -32,7 +32,7 @@ export default function Hero() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_35%_at_50%_92%,rgb(59_130_246/0.08),transparent_55%)]" />
           {/* Top accent + edge vignette */}
           <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-blue-400/30 to-transparent" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_100%_85%_at_50%_40%,transparent_38%,rgb(0_0_0/0.72)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_100%_85%_at_50%_40%,transparent_42%,rgb(2_6_18/0.48)_100%)]" />
           {/* Structure grid */}
           <div
             className="absolute inset-0 opacity-[0.55] bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-size-[48px_48px] mask-[radial-gradient(ellipse_82%_72%_at_50%_36%,#000_18%,transparent_78%)]"
@@ -145,7 +145,7 @@ export default function Hero() {
       <section
         id="demo"
         aria-label="Product demo video"
-        className="border-t border-white/10 bg-black pb-16 pt-8 scroll-mt-24 md:scroll-mt-28 md:pb-24 md:pt-10"
+        className="border-t border-white/10 bg-neutral-950/80 pb-16 pt-8 scroll-mt-24 md:scroll-mt-28 md:pb-24 md:pt-10"
       >
         <Container wide>
           <motion.div
@@ -159,7 +159,7 @@ export default function Hero() {
               Product demo
             </p>
             <div className="rounded-xl bg-blue-500 p-1.5 shadow-[0_0_0_1px_rgba(59,130,246,0.35)] md:rounded-2xl md:p-2">
-              <div className="overflow-hidden rounded-lg bg-black ring-1 ring-black/20 md:rounded-xl">
+              <div className="overflow-hidden rounded-lg bg-neutral-900 ring-1 ring-black/10 md:rounded-xl">
                 <DemoVideo />
               </div>
             </div>

@@ -20,7 +20,7 @@ export default function Navbar() {
       className="fixed top-0 left-0 right-0 z-50 pt-5 md:pt-6"
     >
       <Container wide>
-        <nav className="flex items-center justify-between gap-6 rounded-2xl border border-white/10 bg-neutral-950/90 px-4 py-3 shadow-[0_1px_0_rgba(255,255,255,0.06)_inset] backdrop-blur-xl md:px-5">
+        <nav className="flex items-center justify-between gap-6 rounded-2xl border border-white/15 bg-neutral-900/80 px-4 py-3 shadow-[0_1px_0_rgba(255,255,255,0.08)_inset] backdrop-blur-xl md:px-5">
           <a
             href="#"
             className="flex items-center gap-2.5 font-semibold tracking-tight text-neutral-100"
