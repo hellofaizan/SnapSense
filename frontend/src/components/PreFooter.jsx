@@ -14,6 +14,14 @@ const faqs = [
     q: 'Which Windows versions are supported?',
     a: 'Windows 10 and 11. The installer is a standard desktop build — no Microsoft Store required for the beta.',
   },
+  {
+    q: 'Do I need an API key?',
+    a: 'For live AI mode, yes (Groq key). SnapSense also includes a test model mode for local UI testing without external API calls.',
+  },
+  {
+    q: 'Can I use SnapSense without AI chat?',
+    a: 'Yes. You can use Text mode for extraction or Lens mode for visual search when you just need OCR or image lookup.',
+  },
 ]
 
 export default function PreFooter() {

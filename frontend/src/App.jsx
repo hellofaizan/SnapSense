@@ -1,5 +1,6 @@
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
+import ProjectIdea from './components/ProjectIdea'
 import Features from './components/Features'
 import HowItWorks from './components/HowItWorks'
 import UseCases from './components/UseCases'
@@ -12,6 +13,7 @@ export default function App() {
       <Navbar />
       <main>
         <Hero />
+        <ProjectIdea />
         <Features />
         <HowItWorks />
         <UseCases />

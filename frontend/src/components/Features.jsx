@@ -1,5 +1,14 @@
 import { motion } from 'framer-motion'
-import { Brain, Crosshair, MonitorSmartphone, Zap } from 'lucide-react'
+import {
+  Brain,
+  ClipboardCheck,
+  Crosshair,
+  LayoutPanelTop,
+  MonitorSmartphone,
+  SearchCheck,
+  ShieldCheck,
+  Zap,
+} from 'lucide-react'
 import Container from './Container'
 import { ScrollReveal, Stagger, StaggerItem } from './ScrollReveal'
 
@@ -32,6 +41,20 @@ const items = [
     iconWrap: 'bg-teal-500/15 ring-teal-500/25',
     iconColor: 'text-teal-300',
   },
+  {
+    icon: LayoutPanelTop,
+    title: 'Three focused modes',
+    desc: 'Open each capture in AI chat mode, text extraction mode, or Google Lens mode.',
+    iconWrap: 'bg-indigo-500/15 ring-indigo-500/25',
+    iconColor: 'text-indigo-300',
+  },
+  {
+    icon: ClipboardCheck,
+    title: 'Text extraction',
+    desc: 'Pull readable text from screenshots and copy it instantly for notes, docs, or prompts.',
+    iconWrap: 'bg-cyan-500/15 ring-cyan-500/25',
+    iconColor: 'text-cyan-300',
+  },
 ]
 
 export default function Features() {
@@ -41,13 +64,14 @@ export default function Features() {
         <ScrollReveal>
           <p className="text-center text-[12px] font-semibold uppercase tracking-[0.2em] text-blue-400/90">Features</p>
           <h2 className="mt-4 text-center text-3xl font-semibold tracking-tight text-neutral-100 md:text-[2rem]">
-            Built for speed and clarity
+            Built around real desktop workflows
           </h2>
-          <p className="mx-auto mt-5 max-w-lg text-center text-[15px] leading-relaxed text-neutral-400 md:text-[17px]">
-            Everything you need to turn any screen region into something you can act on.
+          <p className="mx-auto mt-5 max-w-2xl text-center text-[15px] leading-relaxed text-neutral-400 md:text-[17px]">
+            From capture to output, SnapSense combines shortcut-driven selection, mode-based analysis, and fast
+            response loops so you can keep momentum while working.
           </p>
         </ScrollReveal>
-        <Stagger className="mt-16 grid gap-4 sm:grid-cols-2 sm:gap-5">
+        <Stagger className="mt-16 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
           {items.map((f) => (
             <StaggerItem key={f.title}>
               <motion.article
