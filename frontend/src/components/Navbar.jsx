@@ -1,15 +1,15 @@
-import { motion } from 'framer-motion'
-import { Download } from 'lucide-react'
-import logoMark from '../assets/logo.svg'
-import Container from './Container'
+import { motion } from "framer-motion";
+import { Download } from "lucide-react";
+import logoMark from "../assets/logo.svg";
+import Container from "./Container";
 
 const links = [
-  { href: '#project-idea', label: 'Project' },
-  { href: '#features', label: 'Features' },
-  { href: '#how-it-works', label: 'How it works' },
-  { href: '#use-cases', label: 'Use cases' },
-  { href: '#demo', label: 'Demo' },
-]
+  { href: "#project-idea", label: "Project" },
+  { href: "#features", label: "Features" },
+  { href: "#how-it-works", label: "How it works" },
+  { href: "#use-cases", label: "Use cases" },
+  { href: "#demo", label: "Demo" },
+];
 
 export default function Navbar() {
   return (
@@ -21,7 +21,10 @@ export default function Navbar() {
     >
       <Container wide>
         <nav className="flex items-center justify-between gap-6 rounded-2xl border border-white/10 bg-neutral-950/90 px-4 py-3 shadow-[0_1px_0_rgba(255,255,255,0.06)_inset] backdrop-blur-xl md:px-5">
-          <a href="#" className="flex items-center gap-2.5 font-semibold tracking-tight text-neutral-100">
+          <a
+            href="#"
+            className="flex items-center gap-2.5 font-semibold tracking-tight text-neutral-100"
+          >
             <img
               src={logoMark}
               alt=""
@@ -43,20 +46,22 @@ export default function Navbar() {
               </a>
             ))}
           </div>
-          <motion.a
-            href="https://github.com/sickboydroid/SnapSense/releases/download/V1/SnapSense-Setup-0.1.0.exe"
-            target="_blank"
-            rel="noopener noreferrer"
-            download="SnapSense-Setup-0.1.0.exe"
-            whileHover={{ opacity: 0.95 }}
-            whileTap={{ scale: 0.98 }}
-            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-blue-500 px-4 py-2 text-[13px] font-semibold text-white shadow-lg shadow-blue-500/20 transition-colors hover:bg-blue-400"
-          >
-            <Download className="h-3.5 w-3.5" strokeWidth={2} />
-            Download
-          </motion.a>
+          <div className="flex items-center gap-2">
+            <motion.a
+              href="https://github.com/sickboydroid/SnapSense/releases/download/V1/SnapSense-Setup-0.1.0.exe"
+              target="_blank"
+              rel="noopener noreferrer"
+              download="SnapSense-Setup-0.1.0.exe"
+              whileHover={{ opacity: 0.95 }}
+              whileTap={{ scale: 0.98 }}
+              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-blue-500 px-4 py-2 text-[13px] font-semibold text-white shadow-lg shadow-blue-500/20 transition-colors hover:bg-blue-400"
+            >
+              <Download className="h-3.5 w-3.5" strokeWidth={2} />
+              Download
+            </motion.a>
+          </div>
         </nav>
       </Container>
     </motion.header>
-  )
+  );
 }

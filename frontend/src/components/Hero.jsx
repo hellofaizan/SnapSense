@@ -93,16 +93,16 @@ export default function Hero() {
                 Download for Windows
                 <ArrowRight className="h-4 w-4 shrink-0 opacity-90" strokeWidth={2} />
               </motion.a>
-              <motion.button
-                type="button"
-                onClick={scrollToDemo}
+              <motion.a
+                href="https://github.com/sickboydroid/SnapSense"
+                target="_blank"
+                rel="noopener noreferrer"
                 whileHover={{ backgroundColor: 'rgba(255,255,255,0.06)' }}
                 whileTap={{ scale: 0.99 }}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-white/25 bg-transparent px-6 py-3 text-[14px] font-semibold text-neutral-100 transition-colors hover:border-white/40 sm:flex-initial sm:min-w-[160px] md:px-7 md:py-3.5 md:text-[15px]"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-white/25 bg-transparent px-2 py-3 text-[14px] font-semibold text-neutral-100 transition-colors hover:border-white/40 sm:flex-initial sm:min-w-[120px] md:px-7 md:py-3.5 md:text-[15px]"
               >
-                <Play className="h-4 w-4 shrink-0 fill-current text-neutral-200" />
-                Watch demo
-              </motion.button>
+                Github
+              </motion.a>
             </motion.div>
 
             <motion.div
