@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https:; frame-src https:; worker-src 'self' blob:; font-src 'self' file: data:"
+    />
+    <title>SnapSense</title>
+    <link rel="stylesheet" href="../shared/app-chrome.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="wrap" id="app-wrap" data-mode="ai">
+      <header class="titlebar">
+        <h1 class="titlebar-brand">
+          <img
+            class="img-ico titlebar-mark"
+            src="../../assets/icons/app-mark.svg"
+            width="18"
+            height="18"
+            alt=""
+          />
+          <span>SnapSense · <span id="mode-label">AI</span></span>
+        </h1>
+        <div class="titlebar-actions">
+          <label class="model-select-wrap">
+            <img
+              class="img-ico model-ico"
+              src="../../assets/icons/model-sliders.svg"
+              width="14"
+              height="14"
+              alt=""
+            />
+            <span class="model-select-label">Model</span>
+            <select id="ai-model-mode" aria-label="AI model">
+              <option value="groq">Groq</option>
+              <option value="test">Test</option>
+            </select>
+          </label>
+          <button type="button" id="btn-close" class="icon-btn ghost" aria-label="Close">
+            <img class="img-ico" src="../../assets/icons/close.svg" width="18" height="18" alt="" />
+          </button>
+        </div>
+      </header>
+      <div id="banner" class="banner"></div>
+      <div class="panel-body" id="section-ai">
+        <div class="chat-scroll" id="chat"></div>
+        <div class="typing" id="typing" hidden>
+          <span class="typing-dot" aria-hidden="true"></span>
+          Thinking…
+        </div>
+        <div class="input-row">
+          <input type="text" id="msg" placeholder="Ask a follow-up…" autocomplete="off" />
+          <button type="button" id="send" class="icon-btn send-ico" aria-label="Send message">
+            <img class="img-ico" src="../../assets/icons/send.svg" width="18" height="18" alt="" />
+          </button>
+        </div>
+      </div>
+      <div class="panel-body" id="section-text" hidden>
+        <div class="text-chat-scroll" id="text-chat">
+          <div class="bubble user text-mode-user">
+            <div class="bubble-body user-capture-img-only">
+              <img id="shot-text" class="text-chat-thumb" alt="" />
+            </div>
+          </div>
+          <p class="text-chat-meta" id="text-status"></p>
+          <div id="text-loading" class="text-loading-host" hidden></div>
+          <div id="text-error" class="bubble assistant error text-extract-err" hidden></div>
+          <div id="text-result" class="text-result-wrap" hidden>
+            <div class="bubble assistant">
+              <div class="bubble-body text-extract-body">
+                <div
+                  id="text-output"
+                  class="text-output-inline"
+                  role="region"
+                  aria-label="Extracted text"
+                ></div>
+              </div>
+            </div>
+            <div class="text-actions text-actions-chat">
+              <button type="button" id="text-copy" class="btn-with-ico">
+                <img class="img-ico btn-ico" src="../../assets/icons/copy.svg" width="16" height="16" alt="" />
+                Copy
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body" id="section-lens" hidden>
+        <div class="lens-stack">
+          <webview
+            id="lens-view"
+            allowpopups
+            partition="persist:snapsense-lens"
+            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+          ></webview>
+          <div id="lens-loading" class="lens-loading">
+            <div class="lens-loading-inner lens-shimmer-stage lens-shimmer-mixed">
+              <p class="lens-loading-label">Loading Lens…</p>
+              <div class="lens-sk-grid">
+                <div class="shimmer-media lens-tile" aria-hidden="true"></div>
+                <div class="shimmer-media lens-tile" aria-hidden="true"></div>
+                <div class="lens-sk-textcol">
+                  <div class="shimmer-line shimmer-title w-95"></div>
+                  <div class="shimmer-line w-75 d2"></div>
+                  <div class="shimmer-line w-55 d3"></div>
+                </div>
+              </div>
+              <div class="shimmer-media lens-hero" aria-hidden="true"></div>
+              <div class="lens-sk-mid">
+                <div class="shimmer-circle md" aria-hidden="true"></div>
+                <div class="lens-sk-lines">
+                  <div class="shimmer-line w-100"></div>
+                  <div class="shimmer-line w-88 d2"></div>
+                  <div class="shimmer-line w-70 d4"></div>
+                </div>
+              </div>
+              <div class="shimmer-line w-92 d1"></div>
+              <div class="shimmer-line w-80 d3"></div>
+              <div class="shimmer-line w-65 d5"></div>
+            </div>
+          </div>
+          <div id="lens-error" class="lens-error" hidden></div>
+          <button
+            type="button"
+            id="lens-open-browser"
+            class="lens-float-external icon-btn ghost"
+            title="Open Google Lens in your browser — screenshot is copied; paste with Ctrl+V or ⌘V"
+            aria-label="Open Google Lens in browser; paste capture with keyboard shortcut"
+          >
+            <img
+              class="img-ico"
+              src="../../assets/icons/external-link.svg"
+              width="18"
+              height="18"
+              alt=""
+            />
+          </button>
+        </div>
+      </div>
+    </div>
+    <script src="../../node_modules/marked/lib/marked.umd.js"></script>
+    <script src="../../node_modules/dompurify/dist/purify.min.js"></script>
+    <script src="panel.js"></script>
+  </body>
+</html>

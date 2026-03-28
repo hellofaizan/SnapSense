@@ -1,0 +1,57 @@
+{
+  "name": "snapsense",
+  "version": "0.1.0",
+  "description": "SnapSense — tray screenshot + AI overlay",
+  "author": "SnapSense",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "pack": "node scripts/bake-key-for-dist.js && electron-builder --dir && node scripts/clear-baked-key.js",
+    "dist": "node scripts/bake-key-for-dist.js && electron-builder --win --x64 && node scripts/clear-baked-key.js"
+  },
+  "build": {
+    "appId": "com.snapsense.app",
+    "productName": "SnapSense",
+    "icon": "assets/icon.png",
+    "copyright": "Copyright © SnapSense",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "SnapSense",
+      "menuCategory": "SnapSense"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "dompurify": "^3.3.3",
+    "marked": "^17.0.5"
+  }
+}

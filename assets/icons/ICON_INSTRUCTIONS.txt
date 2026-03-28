@@ -1,0 +1,25 @@
+SnapSense icons (SVG or PNG)
+=============================
+
+All paths are relative to this folder:
+  SnapSense/assets/icons/
+
+Expected filenames (replace these files with your own art — keep the same names):
+
+  app-mark.svg       — Titlebar / brand mark (search: Lucide "sparkles", 24px outline)
+  mode-ai.svg        — Mode: AI (same as sparkles)
+  mode-text.svg      — Mode: extract text (Lucide "align-left" or "text-align-left")
+  mode-lens.svg      — Mode: Lens (Lucide "search")
+  model-sliders.svg  — Next to "Model" label (Lucide "sliders-horizontal" or "chart-no-axes-column")
+  close.svg          — Close panel (Lucide "x")
+  send.svg           — Send message — use WHITE strokes (#fff) on blue button (Lucide "send")
+  copy.svg           — Copy text (Lucide "copy")
+  external-link.svg  — Open in browser (Lucide "external-link")
+
+Tips
+----
+- Prefer SVG, 24x24 viewBox, stroke ~2px, no fill (outline style).
+- PNG: export @1x 24px or 32px; name the same but .png and update index.html src (or keep .svg).
+- Sources: https://lucide.dev  |  https://heroicons.com (24 outline)  |  Phosphor "regular"
+
+If a file is missing, the main process logs a warning to the terminal when the app starts.

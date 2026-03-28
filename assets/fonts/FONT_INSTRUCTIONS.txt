@@ -1,0 +1,18 @@
+SnapSense fonts
+===============
+
+1) Inter (UI — required name)
+   You saved the variable TTF as:
+   SnapSense/assets/fonts/Inter.ttf
+
+   If this file is missing, the app logs a warning to the console and uses Segoe UI / system-ui.
+
+2) JetBrains Mono (code / extracted text — optional)
+   Preferred file name:
+   SnapSense/assets/fonts/JetBrainsMono.ttf
+   Alternate (if you only have WOFF2):
+   SnapSense/assets/fonts/JetBrainsMono.woff2
+
+   If both are missing, monospace falls back to Cascadia Code / Consolas.
+
+Restart the app after adding or renaming font files.

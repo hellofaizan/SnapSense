@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' file: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' file:"
+    />
+    <title>SnapSense mode</title>
+    <link rel="stylesheet" href="../shared/app-chrome.css" />
+    <link rel="stylesheet" href="strip.css" />
+  </head>
+  <body>
+    <div class="tablet" role="tablist" aria-label="Result mode">
+      <button type="button" class="seg active" data-mode="ai" role="tab" aria-selected="true" title="AI">
+        <span class="seg-inner">
+          <img class="img-ico seg-ico" src="../../assets/icons/mode-ai.svg" width="16" height="16" alt="" />
+          <span class="seg-label">AI</span>
+        </span>
+      </button>
+      <button type="button" class="seg" data-mode="text" role="tab" aria-selected="false" title="Extract text">
+        <span class="seg-inner">
+          <img class="img-ico seg-ico" src="../../assets/icons/mode-text.svg" width="16" height="16" alt="" />
+          <span class="seg-label">Text</span>
+        </span>
+      </button>
+      <button type="button" class="seg" data-mode="lens" role="tab" aria-selected="false" title="Lens">
+        <span class="seg-inner">
+          <img class="img-ico seg-ico" src="../../assets/icons/mode-lens.svg" width="16" height="16" alt="" />
+          <span class="seg-label">Lens</span>
+        </span>
+      </button>
+    </div>
+    <script src="strip.js"></script>
+  </body>
+</html>

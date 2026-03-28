@@ -1,0 +1,9 @@
+node_modules/
+.env
+src/baked-groq-key.js
+*.log
+dist/
+out/
+eng.traineddata
+dummy.txt
+out
