@@ -94,7 +94,7 @@ export default function Hero() {
                 <ArrowRight className="h-4 w-4 shrink-0 opacity-90" strokeWidth={2} />
               </motion.a>
               <motion.a
-                href="https://github.com/sickboydroid/SnapSense"
+                href="https://github.com/hellofaizan/SnapSense"
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ backgroundColor: 'rgba(255,255,255,0.06)' }}
