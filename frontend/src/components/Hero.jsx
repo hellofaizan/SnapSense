@@ -6,7 +6,7 @@ import Container from './Container'
 import DemoVideo from './DemoVideo'
 
 const steps = [
-  { n: '1', label: 'Press shortcut' },
+  { n: '1', label: 'Press Win + Alt + S' },
   { n: '2', label: 'Snip region' },
   { n: '3', label: 'Get insight' },
 ]
@@ -104,6 +104,14 @@ export default function Hero() {
                 Github
               </motion.a>
             </motion.div>
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.31 }}
+              className="mt-3 flex items-center gap-2 text-[12px] text-neutral-600 md:text-[13px]"
+            >
+              Trigger capture anytime with <span className="font-bold text-lg text-neutral-400">Win + Alt + S</span>
+            </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 8 }}
