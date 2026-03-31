@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/sickboydroid/SnapSense/releases/download/V1/SnapSense.exe">
+  <a href="https://github.com/sickboydroid/SnapSense/releases/download/V1/SnapSense-Setup-0.1.0.exe">
     <img src="assets/icon.svg" alt="SnapSense" width="160" height="160" />
   </a>
 </p>
@@ -11,9 +11,9 @@
 </p>
 
 <p align="center">
-  <a href="https://www.example.com/snapsense">Website</a>
+  <a href="https://snapsense-tawny.vercel.app/">Website</a>
   &nbsp;·&nbsp;
-  <a href="https://github.com/sickboydroid/SnapSense/releases/download/V1/SnapSense.exe">Download EXE Now!!</a>
+  <a href="https://github.com/sickboydroid/SnapSense/releases/download/V1/SnapSense-Setup-0.1.0.exe">Download EXE Now!!</a>
 </p>
 
 ---
