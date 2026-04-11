@@ -108,9 +108,28 @@ function initFollowUpAttachment() {
   }
 
   if (followUpAttachBtn) {
-    followUpAttachBtn.disabled = true;
-    followUpAttachBtn.title = 'Coming soon';
-    followUpAttachBtn.setAttribute('aria-label', 'Screenshot attach coming soon');
+    followUpAttachBtn.disabled = false;
+    followUpAttachBtn.title = 'Capture region (same as Win+Alt+S)';
+    followUpAttachBtn.setAttribute('aria-label', 'Capture follow-up region');
+    followUpAttachBtn.addEventListener('click', () => {
+      console.info('[SnapSense panel] follow-up-attach click');
+      if (!window.snapsense) {
+        console.error('[SnapSense panel] follow-up-attach: window.snapsense missing (preload not loaded?)');
+        return;
+      }
+      if (typeof window.snapsense.requestFollowUpCapture !== 'function') {
+        console.error('[SnapSense panel] follow-up-attach: requestFollowUpCapture not exposed');
+        return;
+      }
+      try {
+        window.snapsense.requestFollowUpCapture();
+        console.info('[SnapSense panel] follow-up-attach: ipc send dispatched');
+      } catch (err) {
+        console.error('[SnapSense panel] follow-up-attach: send failed', err);
+      }
+    });
+  } else {
+    console.warn('[SnapSense panel] follow-up-attach: #follow-up-attach not found in DOM');
   }
 
   if (followUpRemoveBtn) {
@@ -806,11 +825,18 @@ const off = window.snapsense.onPanelOpen((payload) => onOpen(payload));
 const offFollowUp =
   typeof window.snapsense.onFollowUpCapture === 'function'
     ? window.snapsense.onFollowUpCapture((payload) => {
+        console.info('[SnapSense panel] follow-up-capture ipc received', {
+          hasUrl: Boolean(payload?.imageDataUrl),
+          mime: payload?.mime
+        });
         if (payload && payload.imageDataUrl) {
           setFollowUpImageFromDataUrl(payload.imageDataUrl);
         }
       })
     : null;
+if (!offFollowUp) {
+  console.warn('[SnapSense panel] onFollowUpCapture not available');
+}
 initFollowUpAttachment();
 syncModelSelectFromMain();
 if (chatEl) {

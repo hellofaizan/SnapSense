@@ -657,6 +657,10 @@ function trayIconPath() {
   return appIconPath();
 }
 
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function pickScreenSourceId() {
   try {
     const primary = screen.getPrimaryDisplay();
@@ -677,6 +681,38 @@ async function pickScreenSourceId() {
     log.error('main', 'desktopCapturer.getSources failed', { message: e?.message });
     return null;
   }
+}
+
+async function hideWindowForCapture(win) {
+  if (!win || win.isDestroyed()) {
+    log.warn('main', 'hideWindowForCapture: window missing');
+    return;
+  }
+  log.info('main', 'hideWindowForCapture: starting');
+  await new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      resolve();
+    };
+    const tid = setTimeout(finish, 140);
+    win.once('hide', () => {
+      clearTimeout(tid);
+      finish();
+    });
+    try {
+      win.hide();
+    } catch (e) {
+      clearTimeout(tid);
+      log.debug('main', 'Follow-up hide panel', { message: e?.message });
+      finish();
+    }
+  });
+  // Give Windows a brief beat to settle z-order/composition before opening
+  // the transparent fullscreen capture overlay.
+  await delay(60);
+  log.info('main', 'hideWindowForCapture: done');
 }
 
 function destroyModeStripWindow() {
@@ -883,6 +919,13 @@ async function startFollowUpCaptureFlow() {
     log.warn('main', 'Follow-up capture: no panel');
     return;
   }
+  if (followUpCapturePending || (captureWin && !captureWin.isDestroyed())) {
+    log.warn('main', 'Follow-up capture skipped: already active', {
+      followUpCapturePending,
+      hasCaptureWin: Boolean(captureWin && !captureWin.isDestroyed())
+    });
+    return;
+  }
   const gen = ++captureFlowGeneration;
   log.info('main', 'Follow-up capture flow started', { gen });
   destroyCaptureWindow();
@@ -891,8 +934,10 @@ async function startFollowUpCaptureFlow() {
   try {
     // Resolve desktopCapturer while the panel is still visible. On Windows, calling
     // getSources with no visible BrowserWindow can return no sources or behave oddly.
+    log.info('main', 'Follow-up capture: resolving desktop source', { gen });
     const sourceId = await pickScreenSourceId();
     if (gen !== captureFlowGeneration) {
+      log.info('main', 'Follow-up capture superseded (generation mismatch)', { gen, current: captureFlowGeneration });
       followUpCapturePending = false;
       if (panelWin && !panelWin.isDestroyed()) {
         panelWin.show();
@@ -909,11 +954,9 @@ async function startFollowUpCaptureFlow() {
       }
       return;
     }
-    try {
-      panelWin.hide();
-    } catch (e) {
-      log.debug('main', 'Follow-up hide panel', { message: e?.message });
-    }
+    log.info('main', 'Follow-up capture: hiding panel before overlay', { gen, sourceId });
+    await hideWindowForCapture(panelWin);
+    log.info('main', 'Follow-up capture: creating capture window', { gen });
     createCaptureWindow(sourceId);
   } catch (e) {
     log.error('main', 'Follow-up capture failed', { message: e.message, gen });
@@ -1155,10 +1198,22 @@ function setupIpc() {
     return requestAi(merged, 4096, log);
   });
 
-  ipcMain.handle('request-follow-up-capture', async () => {
+  const requestFollowUpCapture = async (via) => {
+    log.info('main', 'IPC request-follow-up-capture', { via });
     await startFollowUpCaptureFlow();
     return { ok: true };
+  };
+
+  ipcMain.on('request-follow-up-capture', (_evt) => {
+    log.info('main', 'IPC request-follow-up-capture received (on/send)', {
+      senderId: _evt?.sender?.id
+    });
+    requestFollowUpCapture('send').catch((e) => {
+      log.error('main', 'request-follow-up-capture (send) failed', { message: e?.message });
+    });
   });
+
+  ipcMain.handle('request-follow-up-capture', () => requestFollowUpCapture('invoke'));
 
   ipcMain.on('capture-result', (_evt, payload) => {
     log.info('main', 'Capture result', {
@@ -1184,10 +1239,14 @@ function setupIpc() {
       panelWin.focus();
       setImmediate(() => {
         if (!panelWin.isDestroyed()) {
+          const len = typeof payload.imageDataUrl === 'string' ? payload.imageDataUrl.length : 0;
+          log.info('main', 'Sending follow-up-capture to panel', { mime: payload.mime || 'image/png', dataUrlChars: len });
           panelWin.webContents.send('follow-up-capture', {
             imageDataUrl: payload.imageDataUrl,
             mime: payload.mime || 'image/png'
           });
+        } else {
+          log.warn('main', 'follow-up-capture: panel destroyed before send');
         }
       });
       return;
@@ -1200,7 +1259,7 @@ function setupIpc() {
   });
 
   ipcMain.on('capture-cancel', () => {
-    log.info('main', 'Capture cancelled');
+    log.info('main', 'Capture cancelled', { followUpPending: followUpCapturePending });
     destroyCaptureWindow();
     if (followUpCapturePending) {
       followUpCapturePending = false;

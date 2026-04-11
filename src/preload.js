@@ -51,7 +51,10 @@ contextBridge.exposeInMainWorld('snapsense', {
   setOpenAiModel: (model) => ipcRenderer.invoke('set-openai-model', { model }),
   closePanel: () => ipcRenderer.send('panel-close'),
 
-  requestFollowUpCapture: () => ipcRenderer.invoke('request-follow-up-capture'),
+  requestFollowUpCapture: () => {
+    console.info('[SnapSense preload] request-follow-up-capture → main (send)');
+    ipcRenderer.send('request-follow-up-capture');
+  },
 
   onFollowUpCapture: (fn) => {
     const handler = (_, payload) => fn(payload);
