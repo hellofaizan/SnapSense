@@ -1,9 +1,9 @@
 import { Fragment } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, Download, Play } from 'lucide-react'
 import { StaggerLine, StaggerLines } from './animations/StaggerLines'
 import Container from './Container'
 import DemoVideo from './DemoVideo'
+import { HeroDownloadButton } from './DownloadButton'
 
 const steps = [
   { n: '1', label: 'Press Win + Alt + S' },
@@ -46,7 +46,7 @@ export default function Hero() {
           />
         </div>
         <Container wide className="relative z-10 flex flex-1 flex-col">
-          <div className="mx-auto flex w-full max-w-[44rem] flex-1 flex-col items-center text-center md:max-w-[48rem]">
+          <div className="mx-auto flex w-full max-w-176 flex-1 flex-col items-center text-center md:max-w-[48rem]">
             <StaggerLines className="w-full">
               <StaggerLine
                 as="h1"
@@ -78,40 +78,10 @@ export default function Hero() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.28 }}
-              className="scroll-mt-24 mt-7 flex w-full flex-col items-stretch justify-center gap-3 sm:mt-8 sm:flex-row sm:items-center sm:gap-3 md:scroll-mt-28"
+              className="scroll-mt-24 mt-7 w-full sm:mt-8 md:scroll-mt-28"
             >
-              <motion.a
-                href="https://github.com/sickboydroid/SnapSense/releases/download/V1/SnapSense-Setup-0.1.0.exe"
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-                whileHover={{ opacity: 0.95 }}
-                whileTap={{ scale: 0.99 }}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-500 px-6 py-3 text-[14px] font-semibold text-white shadow-md shadow-blue-500/20 transition-colors hover:bg-blue-400 sm:flex-initial sm:min-w-[200px] md:px-7 md:py-3.5 md:text-[15px]"
-              >
-                <Download className="h-4 w-4 shrink-0" strokeWidth={2} />
-                Download for Windows
-                <ArrowRight className="h-4 w-4 shrink-0 opacity-90" strokeWidth={2} />
-              </motion.a>
-              <motion.a
-                href="https://github.com/hellofaizan/SnapSense"
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ backgroundColor: 'rgba(255,255,255,0.06)' }}
-                whileTap={{ scale: 0.99 }}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-white/25 bg-transparent px-2 py-3 text-[14px] font-semibold text-neutral-100 transition-colors hover:border-white/40 sm:flex-initial sm:min-w-[120px] md:px-7 md:py-3.5 md:text-[15px]"
-              >
-                Github
-              </motion.a>
+              <HeroDownloadButton githubUrl="https://github.com/hellofaizan/SnapSense" />
             </motion.div>
-            <motion.p
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.31 }}
-              className="mt-3 flex items-center gap-2 text-[12px] text-neutral-600 md:text-[13px]"
-            >
-              Trigger capture anytime with <span className="font-bold text-lg text-neutral-400">Win + Alt + S</span>
-            </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 8 }}

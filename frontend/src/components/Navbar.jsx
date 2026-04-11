@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { Download } from "lucide-react";
 import logoMark from "../assets/logo.svg";
 import Container from "./Container";
+import { NavDownloadButton } from "./DownloadButton";
 
 const links = [
   { href: "#project-idea", label: "Project" },
@@ -47,18 +47,7 @@ export default function Navbar() {
             ))}
           </div>
           <div className="flex items-center gap-2">
-            <motion.a
-              href="https://github.com/sickboydroid/SnapSense/releases/download/V1/SnapSense-Setup-0.1.0.exe"
-              target="_blank"
-              rel="noopener noreferrer"
-              download="SnapSense-Setup-0.1.0.exe"
-              whileHover={{ opacity: 0.95 }}
-              whileTap={{ scale: 0.98 }}
-              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-blue-500 px-4 py-2 text-[13px] font-semibold text-white shadow-lg shadow-blue-500/20 transition-colors hover:bg-blue-400"
-            >
-              <Download className="h-3.5 w-3.5" strokeWidth={2} />
-              Download
-            </motion.a>
+            <NavDownloadButton />
           </div>
         </nav>
       </Container>
