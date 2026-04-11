@@ -52,10 +52,10 @@
     "mac": {
       "icon": "assets/icon.png",
       "category": "public.app-category.productivity",
-      "target": ["dmg"],
-      "dmg": {
-        "writeUpdateInfo": false
-      }
+      "target": ["dmg"]
+    },
+    "dmg": {
+      "writeUpdateInfo": false
     },
     "linux": {
       "icon": "assets/icon.png",
