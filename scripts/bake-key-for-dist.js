@@ -1,6 +1,9 @@
 /**
- * Reads GROQ_KEY from .env and writes src/baked-groq-key.js for electron-builder.
- * Run only via npm run dist / pack — do not commit the generated file.
+ * Bakes GROQ_KEY into src/baked-groq-key.js so it ships inside the packaged app.
+ * Key resolution order:
+ *   1. GROQ_KEY environment variable (used by CI / GitHub Actions)
+ *   2. GROQ_KEY entry in .env file (used for local dist builds)
+ * The generated file is gitignored — never commit it.
  */
 const fs = require('fs');
 const path = require('path');
@@ -9,33 +12,33 @@ const root = path.join(__dirname, '..');
 const envPath = path.join(root, '.env');
 const outPath = path.join(root, 'src', 'baked-groq-key.js');
 
-if (!fs.existsSync(envPath)) {
-  console.error('[bake-key-for-dist] Missing .env in project root. Add GROQ_KEY=...');
-  process.exit(1);
-}
+// 1. Try environment variable first (CI/GitHub Actions injects this)
+let key = (process.env.GROQ_KEY || '').trim();
 
-const raw = fs.readFileSync(envPath, 'utf8');
-let key = '';
-for (const line of raw.split(/\r?\n/)) {
-  const trimmed = line.trim();
-  if (!trimmed || trimmed.startsWith('#')) continue;
-  const idx = trimmed.indexOf('=');
-  if (idx <= 0) continue;
-  const k = trimmed.slice(0, idx).trim();
-  if (k !== 'GROQ_KEY') continue;
-  let v = trimmed.slice(idx + 1).trim();
-  if (
-    (v.startsWith('"') && v.endsWith('"')) ||
-    (v.startsWith("'") && v.endsWith("'"))
-  ) {
-    v = v.slice(1, -1);
+// 2. Fall back to .env file (local dev builds)
+if (!key && fs.existsSync(envPath)) {
+  const raw = fs.readFileSync(envPath, 'utf8');
+  for (const line of raw.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const idx = trimmed.indexOf('=');
+    if (idx <= 0) continue;
+    const k = trimmed.slice(0, idx).trim();
+    if (k !== 'GROQ_KEY') continue;
+    let v = trimmed.slice(idx + 1).trim();
+    if (
+      (v.startsWith('"') && v.endsWith('"')) ||
+      (v.startsWith("'") && v.endsWith("'"))
+    ) {
+      v = v.slice(1, -1);
+    }
+    key = v;
+    break;
   }
-  key = v;
-  break;
 }
 
 if (!key || key.length < 10) {
-  console.error('[bake-key-for-dist] GROQ_KEY missing or invalid in .env');
+  console.error('[bake-key-for-dist] GROQ_KEY not found. Set the GROQ_KEY env var (CI) or add it to .env (local).');
   process.exit(1);
 }
 
