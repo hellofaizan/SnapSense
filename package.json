@@ -1,6 +1,6 @@
 {
   "name": "snapsense",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "SnapSense — tray screenshot + AI overlay",
   "author": "SnapSense",
   "main": "src/main.js",
@@ -11,19 +11,21 @@
     "dist": "electron-builder",
     "dist:win": "electron-builder --win nsis --x64",
     "dist:linux": "electron-builder --linux AppImage",
-    "dist:mac": "electron-builder --mac dmg zip",
+    "dist:mac": "electron-builder --mac dmg",
     "dist:win:local": "electron-builder --win nsis --x64 --publish never",
     "dist:linux:local": "electron-builder --linux AppImage --publish never",
-    "dist:mac:local": "electron-builder --mac dmg zip --publish never"
+    "dist:mac:local": "electron-builder --mac dmg --publish never"
   },
   "build": {
     "publish": {
       "provider": "github",
-      "releaseType": "release"
+      "releaseType": "release",
+      "publishAutoUpdate": false
     },
+    "afterAllArtifactBuild": "./scripts/prune-release-artifacts.js",
     "appId": "com.snapsense.app",
     "productName": "SnapSense",
-    "icon": "icon.png",
+    "icon": "assets/icon.png",
     "copyright": "Copyright © SnapSense",
     "directories": {
       "output": "dist",
@@ -35,7 +37,7 @@
       "package.json"
     ],
     "win": {
-      "icon": "icon.png",
+      "icon": "assets/icon.png",
       "signAndEditExecutable": false,
       "target": [
         {
@@ -48,15 +50,15 @@
       "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "mac": {
-      "icon": "icon.png",
+      "icon": "assets/icon.png",
       "category": "public.app-category.productivity",
-      "target": [
-        "dmg",
-        "zip"
-      ]
+      "target": ["dmg"],
+      "dmg": {
+        "writeUpdateInfo": false
+      }
     },
     "linux": {
-      "icon": "icon.png",
+      "icon": "assets/icon.png",
       "category": "Utility",
       "target": [
         "AppImage"
@@ -64,6 +66,7 @@
       "artifactName": "${productName}-${version}-${arch}.${ext}"
     },
     "nsis": {
+      "differentialPackage": false,
       "oneClick": false,
       "perMachine": false,
       "allowElevation": true,

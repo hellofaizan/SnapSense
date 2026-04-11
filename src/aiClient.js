@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { app } = require('electron');
 const { getOpenAiApiKeySync } = require('./secureCredentials');
 
 const DUMMY_GROQ_KEY = 'groq-dummy-replace-with-your-key';
@@ -7,7 +8,25 @@ const DEFAULT_GROQ_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
 const DEFAULT_OPENAI_MODEL = 'gpt-4o-mini';
 const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
 const PROMPTS_PATH = path.join(__dirname, '..', 'config', 'ai-prompts.json');
-const SETTINGS_PATH = path.join(__dirname, '..', 'config', 'ai-settings.json');
+
+/**
+ * Settings are stored in the OS user-data directory so they survive asar packaging
+ * and can be written to in production builds (the asar archive is read-only).
+ * Falls back to the repo config/ folder in development for convenience.
+ */
+function getSettingsPath() {
+  try {
+    const userData = app.getPath('userData');
+    return path.join(userData, 'ai-settings.json');
+  } catch {
+    // app not ready yet (unit-test context) – fall back to dev path
+    return path.join(__dirname, '..', 'config', 'ai-settings.json');
+  }
+}
+
+function getSettingsPathFallback() {
+  return path.join(__dirname, '..', 'config', 'ai-settings.json');
+}
 
 /** Populated only when `npm run dist` / `pack` runs `scripts/bake-key-for-dist.js` (file is gitignored). */
 function getBakedGroqKey() {
@@ -37,19 +56,40 @@ function readJsonSafe(filePath, fallback) {
 }
 
 function writeJsonSafe(filePath, value) {
-  const dir = path.dirname(filePath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  try {
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+  } catch (e) {
+    // Silently ignore write failures (e.g. read-only asar in production)
+    console.warn('[SnapSense aiClient] writeJsonSafe failed:', e?.message, filePath);
   }
-  fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+}
+
+/**
+ * Read settings: try userData first, fall back to bundled config/ for initial defaults.
+ */
+function readSettings() {
+  const primary = getSettingsPath();
+  const settings = readJsonSafe(primary, null);
+  if (settings !== null) return settings;
+  // First run in production: seed from bundled defaults if available
+  const fallback = readJsonSafe(getSettingsPathFallback(), {});
+  return fallback;
+}
+
+function writeSettings(settings) {
+  writeJsonSafe(getSettingsPath(), settings);
 }
 
 function getModelMode() {
-  const settings = readJsonSafe(SETTINGS_PATH, {});
+  const settings = readSettings();
   let m = settings.modelMode;
   if (m === 'test') {
     settings.modelMode = 'groq';
-    writeJsonSafe(SETTINGS_PATH, settings);
+    writeSettings(settings);
     return 'groq';
   }
   if (m === 'openai') return 'openai';
@@ -58,14 +98,14 @@ function getModelMode() {
 
 function setModelMode(mode) {
   const normalized = mode === 'openai' ? 'openai' : 'groq';
-  const settings = readJsonSafe(SETTINGS_PATH, {});
+  const settings = readSettings();
   settings.modelMode = normalized;
-  writeJsonSafe(SETTINGS_PATH, settings);
+  writeSettings(settings);
   return normalized;
 }
 
 function getOpenAiModel() {
-  const settings = readJsonSafe(SETTINGS_PATH, {});
+  const settings = readSettings();
   const fromFile = (settings.openaiModel || '').trim();
   if (fromFile) return fromFile;
   const env = (process.env.OPENAI_MODEL || '').trim();
@@ -75,22 +115,22 @@ function getOpenAiModel() {
 function setOpenAiModel(model) {
   const trimmed = typeof model === 'string' ? model.trim() : '';
   const value = trimmed || DEFAULT_OPENAI_MODEL;
-  const settings = readJsonSafe(SETTINGS_PATH, {});
+  const settings = readSettings();
   settings.openaiModel = value;
-  writeJsonSafe(SETTINGS_PATH, settings);
+  writeSettings(settings);
   return value;
 }
 
 function getStealthMode() {
-  const settings = readJsonSafe(SETTINGS_PATH, {});
+  const settings = readSettings();
   return Boolean(settings.stealthMode);
 }
 
 function setStealthMode(enabled) {
   const value = Boolean(enabled);
-  const settings = readJsonSafe(SETTINGS_PATH, {});
+  const settings = readSettings();
   settings.stealthMode = value;
-  writeJsonSafe(SETTINGS_PATH, settings);
+  writeSettings(settings);
   return value;
 }
 

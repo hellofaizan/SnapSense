@@ -867,8 +867,8 @@ function createCaptureWindow(sourceId) {
 function applyStealthMode(enabled) {
   stealthActive = Boolean(enabled);
   log.info('main', 'Stealth mode', { enabled: stealthActive });
-  setStealthMode(stealthActive);
 
+  // Apply window-level stealth FIRST — this must always run even if persist fails.
   if (panelWin && !panelWin.isDestroyed()) {
     try {
       panelWin.setContentProtection(stealthActive);
@@ -876,6 +876,13 @@ function applyStealthMode(enabled) {
     } catch (e) {
       log.warn('main', 'applyStealthMode panelWin error', { message: e?.message });
     }
+  }
+
+  // Persist preference after applying (write failure must not block the above).
+  try {
+    setStealthMode(stealthActive);
+  } catch (e) {
+    log.warn('main', 'applyStealthMode persist error', { message: e?.message });
   }
 
   if (stealthActive) {
