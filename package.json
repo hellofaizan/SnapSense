@@ -11,9 +11,16 @@
     "dist": "electron-builder",
     "dist:win": "electron-builder --win nsis --x64",
     "dist:linux": "electron-builder --linux AppImage",
-    "dist:mac": "electron-builder --mac dmg zip"
+    "dist:mac": "electron-builder --mac dmg zip",
+    "dist:win:local": "electron-builder --win nsis --x64 --publish never",
+    "dist:linux:local": "electron-builder --linux AppImage --publish never",
+    "dist:mac:local": "electron-builder --mac dmg zip --publish never"
   },
   "build": {
+    "publish": {
+      "provider": "github",
+      "releaseType": "release"
+    },
     "appId": "com.snapsense.app",
     "productName": "SnapSense",
     "icon": "icon.png",
