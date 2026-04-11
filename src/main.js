@@ -110,6 +110,8 @@ let captureSessionMode = 'ai';
 let captureEscapeShortcutRegistered = false;
 /** Incremented on each capture start so stale async work cannot open duplicate windows */
 let captureFlowGeneration = 0;
+/** True while panel requested a region capture for chat follow-up (panel hidden, not destroyed). */
+let followUpCapturePending = false;
 /** One GET to google.com so CONSENT / cookies exist before Lens POST (Chromium fetch only). */
 let googleLensSessionPrimed = false;
 
@@ -656,20 +658,25 @@ function trayIconPath() {
 }
 
 async function pickScreenSourceId() {
-  const primary = screen.getPrimaryDisplay();
-  const sources = await desktopCapturer.getSources({
-    types: ['screen'],
-    thumbnailSize: { width: 150, height: 150 },
-    fetchWindowIcons: false
-  });
-  if (!sources.length) {
-    log.error('main', 'No desktop capture sources');
+  try {
+    const primary = screen.getPrimaryDisplay();
+    const sources = await desktopCapturer.getSources({
+      types: ['screen'],
+      thumbnailSize: { width: 150, height: 150 },
+      fetchWindowIcons: false
+    });
+    if (!sources.length) {
+      log.error('main', 'No desktop capture sources');
+      return null;
+    }
+    const match = sources.find((s) => String(s.display_id) === String(primary.id));
+    const picked = match || sources[0];
+    log.info('main', 'Desktop source', { id: picked.id, name: picked.name, display_id: picked.display_id });
+    return picked.id;
+  } catch (e) {
+    log.error('main', 'desktopCapturer.getSources failed', { message: e?.message });
     return null;
   }
-  const match = sources.find((s) => String(s.display_id) === String(primary.id));
-  const picked = match || sources[0];
-  log.info('main', 'Desktop source', { id: picked.id, name: picked.name, display_id: picked.display_id });
-  return picked.id;
 }
 
 function destroyModeStripWindow() {
@@ -868,7 +875,58 @@ function createPanelWindow(payload) {
   log.info('main', 'Panel window created');
 }
 
+/**
+ * Same region capture as Win+Alt+S, but keeps the chat panel and returns the image to it (follow-up).
+ */
+async function startFollowUpCaptureFlow() {
+  if (!panelWin || panelWin.isDestroyed()) {
+    log.warn('main', 'Follow-up capture: no panel');
+    return;
+  }
+  const gen = ++captureFlowGeneration;
+  log.info('main', 'Follow-up capture flow started', { gen });
+  destroyCaptureWindow();
+  followUpCapturePending = true;
+  captureSessionMode = 'ai';
+  try {
+    // Resolve desktopCapturer while the panel is still visible. On Windows, calling
+    // getSources with no visible BrowserWindow can return no sources or behave oddly.
+    const sourceId = await pickScreenSourceId();
+    if (gen !== captureFlowGeneration) {
+      followUpCapturePending = false;
+      if (panelWin && !panelWin.isDestroyed()) {
+        panelWin.show();
+        panelWin.focus();
+      }
+      return;
+    }
+    if (!sourceId) {
+      log.warn('main', 'Follow-up capture: no desktop source');
+      followUpCapturePending = false;
+      if (panelWin && !panelWin.isDestroyed()) {
+        panelWin.show();
+        panelWin.focus();
+      }
+      return;
+    }
+    try {
+      panelWin.hide();
+    } catch (e) {
+      log.debug('main', 'Follow-up hide panel', { message: e?.message });
+    }
+    createCaptureWindow(sourceId);
+  } catch (e) {
+    log.error('main', 'Follow-up capture failed', { message: e.message, gen });
+    followUpCapturePending = false;
+    if (panelWin && !panelWin.isDestroyed()) {
+      panelWin.show();
+      panelWin.focus();
+    }
+  }
+}
+
 async function startCaptureFlow() {
+  followUpCapturePending = false;
   const gen = ++captureFlowGeneration;
   log.info('main', 'Capture flow started', { gen });
   destroyPanelWindow();
@@ -1097,14 +1155,41 @@ function setupIpc() {
     return requestAi(merged, 4096, log);
   });
 
+  ipcMain.handle('request-follow-up-capture', async () => {
+    await startFollowUpCaptureFlow();
+    return { ok: true };
+  });
+
   ipcMain.on('capture-result', (_evt, payload) => {
     log.info('main', 'Capture result', {
       hasImage: Boolean(payload?.imageDataUrl),
-      mime: payload?.mime
+      mime: payload?.mime,
+      followUp: followUpCapturePending
     });
     destroyCaptureWindow();
     if (!payload?.imageDataUrl) {
       log.warn('main', 'Empty capture result');
+      if (followUpCapturePending) {
+        followUpCapturePending = false;
+        if (panelWin && !panelWin.isDestroyed()) {
+          panelWin.show();
+          panelWin.focus();
+        }
+      }
+      return;
+    }
+    if (followUpCapturePending && panelWin && !panelWin.isDestroyed()) {
+      followUpCapturePending = false;
+      panelWin.show();
+      panelWin.focus();
+      setImmediate(() => {
+        if (!panelWin.isDestroyed()) {
+          panelWin.webContents.send('follow-up-capture', {
+            imageDataUrl: payload.imageDataUrl,
+            mime: payload.mime || 'image/png'
+          });
+        }
+      });
       return;
     }
     createPanelWindow({
@@ -1117,6 +1202,13 @@ function setupIpc() {
   ipcMain.on('capture-cancel', () => {
     log.info('main', 'Capture cancelled');
     destroyCaptureWindow();
+    if (followUpCapturePending) {
+      followUpCapturePending = false;
+      if (panelWin && !panelWin.isDestroyed()) {
+        panelWin.show();
+        panelWin.focus();
+      }
+    }
   });
 
   ipcMain.on('panel-close', () => {

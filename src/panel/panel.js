@@ -1,6 +1,7 @@
 /* global snapsense */
 
 const chatEl = document.getElementById('chat');
+const chatJumpBottomBtn = document.getElementById('chat-jump-bottom');
 const shotText = document.getElementById('shot-text');
 const msgEl = document.getElementById('msg');
 const sendBtn = document.getElementById('send');
@@ -29,6 +30,12 @@ const openaiKeyBar = document.getElementById('openai-key-bar');
 const openaiApiKeyInput = document.getElementById('openai-api-key');
 const openaiModelIdInput = document.getElementById('openai-model-id');
 const openaiKeySaveBtn = document.getElementById('openai-key-save');
+const voiceToggleBtn = document.getElementById('voice-toggle');
+const followUpPreviewEl = document.getElementById('follow-up-preview');
+const followUpThumbEl = document.getElementById('follow-up-thumb');
+const followUpRemoveBtn = document.getElementById('follow-up-remove');
+const followUpAttachBtn = document.getElementById('follow-up-attach');
+const PLACEHOLDER_IDLE = 'Optional follow-up text…';
 
 let imageDataUrl = '';
 let messages = [];
@@ -44,6 +51,76 @@ let lensEmbedFallbackOpened = false;
 
 /** Plain text for Copy (OCR may include markdown-style text we render as HTML). */
 let lastExtractedPlainText = '';
+
+/** Pending follow-up screenshot (data URL) for the next user message; text may be empty. */
+let followUpImageDataUrl = '';
+
+function syncSendButtonState() {
+  if (!sendBtn) return;
+  if (busy) {
+    sendBtn.disabled = true;
+    return;
+  }
+  const hasText = Boolean(msgEl && msgEl.value.trim().length);
+  const hasImg = Boolean(followUpImageDataUrl);
+  sendBtn.disabled = !hasText && !hasImg;
+}
+
+function setSendChromeDisabled(disabled) {
+  if (!sendBtn) return;
+  if (disabled) {
+    sendBtn.disabled = true;
+  } else {
+    syncSendButtonState();
+  }
+}
+
+function clearFollowUpAttachment() {
+  followUpImageDataUrl = '';
+  if (followUpThumbEl) {
+    followUpThumbEl.removeAttribute('src');
+  }
+  if (followUpPreviewEl) {
+    followUpPreviewEl.hidden = true;
+  }
+  syncSendButtonState();
+}
+
+function setFollowUpImageFromDataUrl(dataUrl) {
+  if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) {
+    return;
+  }
+  followUpImageDataUrl = dataUrl;
+  if (followUpThumbEl) {
+    followUpThumbEl.src = dataUrl;
+  }
+  if (followUpPreviewEl) {
+    followUpPreviewEl.hidden = false;
+  }
+  syncSendButtonState();
+}
+
+function initFollowUpAttachment() {
+  if (voiceToggleBtn) {
+    voiceToggleBtn.disabled = true;
+    voiceToggleBtn.title = 'Coming soon';
+    voiceToggleBtn.setAttribute('aria-label', 'Voice input coming soon');
+  }
+
+  if (followUpAttachBtn) {
+    followUpAttachBtn.disabled = true;
+    followUpAttachBtn.title = 'Coming soon';
+    followUpAttachBtn.setAttribute('aria-label', 'Screenshot attach coming soon');
+  }
+
+  if (followUpRemoveBtn) {
+    followUpRemoveBtn.addEventListener('click', () => clearFollowUpAttachment());
+  }
+  if (msgEl) {
+    msgEl.addEventListener('input', () => syncSendButtonState());
+  }
+  syncSendButtonState();
+}
 
 const mdEngine = window.marked;
 if (mdEngine && mdEngine.setOptions) {
@@ -73,6 +150,35 @@ function renderMarkdown(text) {
   return window.DOMPurify.sanitize(rawHtml);
 }
 
+/** Pixels from bottom to treat as "following" live stream (auto-scroll only then). */
+const CHAT_STICKY_THRESHOLD_PX = 72;
+
+function isChatNearBottom(el) {
+  if (!el) return true;
+  const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
+  return dist <= CHAT_STICKY_THRESHOLD_PX;
+}
+
+function syncChatJumpButton() {
+  if (!chatJumpBottomBtn || !chatEl) return;
+  const overflow = chatEl.scrollHeight - chatEl.clientHeight > 8;
+  chatJumpBottomBtn.hidden = !overflow || isChatNearBottom(chatEl);
+}
+
+function scrollChatToBottomIfPinned(behavior = 'auto') {
+  if (!chatEl) return;
+  if (isChatNearBottom(chatEl)) {
+    chatEl.scrollTo({ top: chatEl.scrollHeight, behavior });
+  }
+  syncChatJumpButton();
+}
+
+function forceScrollChatToBottom(behavior = 'auto') {
+  if (!chatEl) return;
+  chatEl.scrollTo({ top: chatEl.scrollHeight, behavior });
+  syncChatJumpButton();
+}
+
 /** Approximate typing speed for assistant replies (characters per second). */
 const ASSISTANT_STREAM_CPS = 82;
 /** Text-extract result reveal speed (rendered markdown in a div). */
@@ -87,6 +193,7 @@ function streamMarkdownReveal(el, fullText, cps, scrollEl) {
   return new Promise((resolve) => {
     el.innerHTML = '';
     if (!text.length) {
+      if (scrollEl === chatEl) syncChatJumpButton();
       resolve();
       return;
     }
@@ -94,8 +201,11 @@ function streamMarkdownReveal(el, fullText, cps, scrollEl) {
     function tick(now) {
       const n = Math.min(text.length, Math.floor(((now - t0) / 1000) * cps));
       el.innerHTML = renderMarkdown(text.slice(0, n));
-      if (scrollEl) {
+      if (scrollEl && isChatNearBottom(scrollEl)) {
         scrollEl.scrollTop = scrollEl.scrollHeight;
+      }
+      if (scrollEl === chatEl) {
+        syncChatJumpButton();
       }
       if (n < text.length) {
         requestAnimationFrame(tick);
@@ -123,12 +233,12 @@ function streamAssistantReply(fullText) {
 
   if (!text.length) {
     body.innerHTML = renderMarkdown('');
-    chatEl.scrollTop = chatEl.scrollHeight;
+    scrollChatToBottomIfPinned('auto');
     return Promise.resolve();
   }
 
   return streamMarkdownReveal(body, text, ASSISTANT_STREAM_CPS, chatEl).then(() => {
-    chatEl.scrollTo({ top: chatEl.scrollHeight, behavior: 'smooth' });
+    scrollChatToBottomIfPinned('smooth');
   });
 }
 
@@ -144,7 +254,32 @@ function appendBubble(role, text, extraClass) {
   }
   wrap.appendChild(body);
   chatEl.appendChild(wrap);
-  chatEl.scrollTop = chatEl.scrollHeight;
+  scrollChatToBottomIfPinned('auto');
+}
+
+/** Follow-up user turn: optional text plus optional image (API may use placeholder text if only image). */
+function appendUserFollowUpBubble(text, imgDataUrl) {
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble user';
+  const body = document.createElement('div');
+  body.className = 'bubble-body user-capture-msg user-follow-up';
+  if (imgDataUrl) {
+    const img = document.createElement('img');
+    img.className = 'chat-inline-capture chat-follow-thumb';
+    img.src = imgDataUrl;
+    img.alt = '';
+    body.appendChild(img);
+  }
+  const t = (text || '').trim();
+  if (t) {
+    const line = document.createElement('div');
+    line.className = 'user-follow-text';
+    line.textContent = t;
+    body.appendChild(line);
+  }
+  wrap.appendChild(body);
+  chatEl.appendChild(wrap);
+  scrollChatToBottomIfPinned('auto');
 }
 
 /** User message with screenshot only (prompt text is sent to the API but not shown). */
@@ -160,7 +295,7 @@ function appendUserCaptureInChat(imageDataUrl) {
   body.appendChild(img);
   wrap.appendChild(body);
   chatEl.appendChild(wrap);
-  chatEl.scrollTop = chatEl.scrollHeight;
+  forceScrollChatToBottom('auto');
 }
 
 function aiLoadingSkeletonHtml() {
@@ -184,7 +319,7 @@ function addAiLoadingSkeleton() {
   aiLoadingEl.className = 'bubble assistant loading';
   aiLoadingEl.innerHTML = aiLoadingSkeletonHtml();
   chatEl.appendChild(aiLoadingEl);
-  chatEl.scrollTop = chatEl.scrollHeight;
+  scrollChatToBottomIfPinned('auto');
 }
 
 function clearAiLoadingSkeleton() {
@@ -387,14 +522,33 @@ async function runLensFlow() {
   }
 }
 
-async function sendUserMessage(text) {
-  const trimmed = text.trim();
-  if (!trimmed || busy) return;
+async function sendUserMessage() {
+  const trimmed = msgEl.value.trim();
+  const img = followUpImageDataUrl;
+  if ((!trimmed && !img) || busy) return;
+
+  const textForApi = trimmed || (img ? 'Follow-up screenshot.' : '');
+  let userContent;
+  if (img) {
+    userContent = [
+      { type: 'text', text: textForApi },
+      { type: 'image_url', image_url: { url: img } }
+    ];
+  } else {
+    userContent = trimmed;
+  }
+
   busy = true;
-  sendBtn.disabled = true;
+  setSendChromeDisabled(true);
   msgEl.value = '';
-  messages.push({ role: 'user', content: trimmed });
-  appendBubble('user', trimmed);
+  clearFollowUpAttachment();
+
+  messages.push({ role: 'user', content: userContent });
+  if (img) {
+    appendUserFollowUpBubble(trimmed, img);
+  } else {
+    appendBubble('user', trimmed);
+  }
   setTyping(true);
   addAiLoadingSkeleton();
   try {
@@ -404,16 +558,16 @@ async function sendUserMessage(text) {
     await streamAssistantReply(reply);
   } catch (e) {
     clearAiLoadingSkeleton();
-      const msg =
-        e && e.message
-          ? e.message
-          : 'Something went wrong. Check your connection and API credentials.';
+    const msg =
+      e && e.message
+        ? e.message
+        : 'Something went wrong. Check your connection and API credentials.';
     appendBubble('assistant', msg, 'error');
     console.error('[SnapSense panel]', e);
   } finally {
     setTyping(false);
     busy = false;
-    sendBtn.disabled = false;
+    setSendChromeDisabled(false);
     msgEl.focus();
   }
 }
@@ -458,6 +612,8 @@ function onOpen(payload) {
   }
 
   chatEl.innerHTML = '';
+  clearFollowUpAttachment();
+  syncChatJumpButton();
   messages = [];
   const intro =
     'Describe this screenshot and help me with anything visible in it. If you see text, summarize key points.';
@@ -470,7 +626,7 @@ function onOpen(payload) {
     ]
   });
   busy = true;
-  sendBtn.disabled = true;
+  setSendChromeDisabled(true);
   setTyping(true);
   addAiLoadingSkeleton();
   window.snapsense
@@ -490,7 +646,7 @@ function onOpen(payload) {
     })
     .finally(() => {
       busy = false;
-      sendBtn.disabled = false;
+      setSendChromeDisabled(false);
       setTyping(false);
       msgEl.focus();
     });
@@ -498,11 +654,11 @@ function onOpen(payload) {
   refreshApiBanner();
 }
 
-sendBtn.addEventListener('click', () => sendUserMessage(msgEl.value));
+sendBtn.addEventListener('click', () => sendUserMessage());
 msgEl.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     e.preventDefault();
-    sendUserMessage(msgEl.value);
+    sendUserMessage();
   }
 });
 window.addEventListener('keydown', (e) => {
@@ -647,14 +803,37 @@ if (openaiKeySaveBtn && openaiApiKeyInput) {
 }
 
 const off = window.snapsense.onPanelOpen((payload) => onOpen(payload));
+const offFollowUp =
+  typeof window.snapsense.onFollowUpCapture === 'function'
+    ? window.snapsense.onFollowUpCapture((payload) => {
+        if (payload && payload.imageDataUrl) {
+          setFollowUpImageFromDataUrl(payload.imageDataUrl);
+        }
+      })
+    : null;
+initFollowUpAttachment();
 syncModelSelectFromMain();
+if (chatEl) {
+  chatEl.addEventListener('scroll', () => syncChatJumpButton(), { passive: true });
+  try {
+    const ro = new ResizeObserver(() => syncChatJumpButton());
+    ro.observe(chatEl);
+  } catch {
+    /* ignore */
+  }
+}
+if (chatJumpBottomBtn) {
+  chatJumpBottomBtn.addEventListener('click', () => forceScrollChatToBottom('smooth'));
+}
 window.addEventListener('resize', () => {
+  syncChatJumpButton();
   if (appWrap && appWrap.dataset.mode === 'lens') {
     applyLensWebviewZoom();
   }
 });
 window.addEventListener('beforeunload', () => {
   if (typeof off === 'function') off();
+  if (typeof offFollowUp === 'function') offFollowUp();
 });
 // feat: create panel window base @ 14:32:00
 // feat: create panel window base @ 14:32:00

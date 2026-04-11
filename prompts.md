@@ -310,3 +310,23 @@ PS C:\Users\sickb\Desktop\SnapSense> npm run dev
 lets add a feature it add custom model with api token, first add chatgpt model with custom api token and safe token store with encryption
 
 remove the test from the model list, also the groq api key i added to env, its like free token from us, just worry about the open ai api
+
+lets add a small mic option to support inbuild text to speech for follow up question, also, add to stop recording with trancrption... as text field placeholder and when recording, add that animated wave to that instead of mic icon
+
+when i start recording, it auto stops recordign instantly, i think its because of some sort of permissions or somethikng, fix it and make the mic icon small and on top of the follow up text field on right end like whatsapp ui
+
+okay now it waits till the stop recording, but when i stop recording, im not able to speech to text, use web how to do it better
+
+when the text is being generated word by word and the layout is scrolling, im not able to scroll up while generating the text, fix it, and when im at the top, add a small floating icon with dpwn arrow to scroll back down
+
+whats this error `[2026-04-11T19:59:57.814Z] [INFO] [aiClient] Model resolved { model: 'meta-llama/llama-4-scout-17b-16e-instruct' }
+)] OnSizeReceived failed with Error: -2
+[19452:0411/130026.152:ERROR:chunked_data_pipe_upload_data_stream.cc(217)] OnSizeReceived failed with Error: -2` its due to when i click on mic option, and it instanly stoped recording
+
+the the mic is not working it, keep it there and make it disabled with title, comming soon, now work on follow up screenshot with text, how this going to work is, it should first get the screenshot and keep it on top on follow up text input in a small rectangle box with small cross to remove image, and follow up text inout should be optional, just click enter or send button to continue chat
+
+follow up screenshot should be same as first time capturing screenshot, not upload the image
+
+when i click on capture region, nothing happens, it should dim the screen and i should be able to select a particular region
+
+still the follow up screenshot not working, 
