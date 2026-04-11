@@ -1,4 +1,5 @@
 {
   "modelMode": "groq",
-  "openaiModel": "gpt-4o-mini"
+  "openaiModel": "gpt-4o-mini",
+  "stealthMode": false
 }

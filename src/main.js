@@ -23,7 +23,9 @@ const {
   getModelMode,
   setModelMode,
   getOpenAiModel,
-  setOpenAiModel
+  setOpenAiModel,
+  getStealthMode,
+  setStealthMode
 } = require('./aiClient');
 const { setOpenAiApiKey } = require('./secureCredentials');
 
@@ -105,6 +107,8 @@ let tray = null;
 let captureWin = null;
 let modeStripWin = null;
 let panelWin = null;
+/** Whether stealth mode is currently active. */
+let stealthActive = false;
 /** Mode chosen in floating strip during active capture */
 let captureSessionMode = 'ai';
 let captureEscapeShortcutRegistered = false;
@@ -853,6 +857,49 @@ function createCaptureWindow(sourceId) {
   registerCaptureEscapeShortcut();
 }
 
+/**
+ * Enable or disable stealth mode on the panel window.
+ * - setContentProtection(true) → WDA_EXCLUDEFROMCAPTURE on Windows; invisible to Zoom/Meet/Discord/Teams.
+ * - setSkipTaskbar(true)        → removes from Windows taskbar.
+ * - Tray icon destroyed/rebuilt so the app has no visible system presence.
+ * Must be re-applied on every 'focus' event because Electron may reset it after hide/show cycles.
+ */
+function applyStealthMode(enabled) {
+  stealthActive = Boolean(enabled);
+  log.info('main', 'Stealth mode', { enabled: stealthActive });
+  setStealthMode(stealthActive);
+
+  if (panelWin && !panelWin.isDestroyed()) {
+    try {
+      panelWin.setContentProtection(stealthActive);
+      panelWin.setSkipTaskbar(stealthActive);
+    } catch (e) {
+      log.warn('main', 'applyStealthMode panelWin error', { message: e?.message });
+    }
+  }
+
+  if (stealthActive) {
+    if (tray) {
+      try {
+        tray.destroy();
+      } catch {
+        /* ignore */
+      }
+      tray = null;
+      log.info('main', 'Tray destroyed for stealth mode');
+    }
+  } else {
+    if (!tray) {
+      buildTray();
+      log.info('main', 'Tray rebuilt after stealth mode off');
+    }
+  }
+
+  if (panelWin && !panelWin.isDestroyed()) {
+    panelWin.webContents.send('stealth-mode-changed', { enabled: stealthActive });
+  }
+}
+
 function createPanelWindow(payload) {
   destroyPanelWindow();
   const display = screen.getPrimaryDisplay();
@@ -904,9 +951,41 @@ function createPanelWindow(payload) {
     panelWin.focus();
   });
 
+  panelWin.on('focus', () => {
+    // Re-apply content protection on every focus gain — Electron resets it after hide/show cycles
+    // (see https://github.com/electron/electron/issues/45844).
+    if (stealthActive && panelWin && !panelWin.isDestroyed()) {
+      try {
+        panelWin.setContentProtection(true);
+      } catch {
+        /* ignore */
+      }
+    }
+  });
+
   panelWin.on('closed', () => {
     panelWin = null;
   });
+
+  // Restore persisted stealth preference on each new panel window.
+  stealthActive = getStealthMode();
+  if (stealthActive) {
+    setImmediate(() => {
+      if (panelWin && !panelWin.isDestroyed()) {
+        try {
+          panelWin.setContentProtection(true);
+          panelWin.setSkipTaskbar(true);
+        } catch {
+          /* ignore */
+        }
+        if (tray) {
+          try { tray.destroy(); } catch { /* ignore */ }
+          tray = null;
+        }
+        panelWin.webContents.send('stealth-mode-changed', { enabled: true });
+      }
+    });
+  }
 
   log.info('main', 'Panel window created');
 }
@@ -1273,6 +1352,13 @@ function setupIpc() {
   ipcMain.on('panel-close', () => {
     log.info('main', 'Panel close requested');
     destroyPanelWindow();
+  });
+
+  ipcMain.handle('get-stealth-mode', () => ({ enabled: getStealthMode() }));
+
+  ipcMain.handle('set-stealth-mode', (_evt, { enabled }) => {
+    applyStealthMode(Boolean(enabled));
+    return { enabled: stealthActive };
   });
 }
 

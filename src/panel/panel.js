@@ -31,6 +31,7 @@ const openaiApiKeyInput = document.getElementById('openai-api-key');
 const openaiModelIdInput = document.getElementById('openai-model-id');
 const openaiKeySaveBtn = document.getElementById('openai-key-save');
 const voiceToggleBtn = document.getElementById('voice-toggle');
+const stealthToggleBtn = document.getElementById('stealth-toggle');
 const followUpPreviewEl = document.getElementById('follow-up-preview');
 const followUpThumbEl = document.getElementById('follow-up-thumb');
 const followUpRemoveBtn = document.getElementById('follow-up-remove');
@@ -98,6 +99,48 @@ function setFollowUpImageFromDataUrl(dataUrl) {
     followUpPreviewEl.hidden = false;
   }
   syncSendButtonState();
+}
+
+function setStealthButtonState(enabled) {
+  if (!stealthToggleBtn) return;
+  stealthToggleBtn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+  stealthToggleBtn.title = enabled
+    ? 'Stealth ON — invisible to screen sharing. Click to disable.'
+    : 'Stealth mode — hide from screen sharing & taskbar';
+  stealthToggleBtn.setAttribute(
+    'aria-label',
+    enabled ? 'Disable stealth mode' : 'Enable stealth mode'
+  );
+}
+
+async function initStealthToggle() {
+  if (!stealthToggleBtn) return;
+  try {
+    const res = await window.snapsense.getStealthMode();
+    setStealthButtonState(Boolean(res?.enabled));
+  } catch (err) {
+    console.warn('[SnapSense panel] getStealthMode failed', err);
+  }
+
+  stealthToggleBtn.addEventListener('click', async () => {
+    const current = stealthToggleBtn.getAttribute('aria-pressed') === 'true';
+    const next = !current;
+    stealthToggleBtn.disabled = true;
+    try {
+      await window.snapsense.setStealthMode(next);
+      setStealthButtonState(next);
+    } catch (err) {
+      console.error('[SnapSense panel] setStealthMode failed', err);
+    } finally {
+      stealthToggleBtn.disabled = false;
+    }
+  });
+
+  if (typeof window.snapsense.onStealthModeChange === 'function') {
+    window.snapsense.onStealthModeChange((payload) => {
+      setStealthButtonState(Boolean(payload?.enabled));
+    });
+  }
 }
 
 function initFollowUpAttachment() {
@@ -838,6 +881,7 @@ if (!offFollowUp) {
   console.warn('[SnapSense panel] onFollowUpCapture not available');
 }
 initFollowUpAttachment();
+initStealthToggle().catch((e) => console.warn('[SnapSense panel] initStealthToggle', e));
 syncModelSelectFromMain();
 if (chatEl) {
   chatEl.addEventListener('scroll', () => syncChatJumpButton(), { passive: true });

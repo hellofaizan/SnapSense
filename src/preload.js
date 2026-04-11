@@ -60,5 +60,13 @@ contextBridge.exposeInMainWorld('snapsense', {
     const handler = (_, payload) => fn(payload);
     ipcRenderer.on('follow-up-capture', handler);
     return () => ipcRenderer.removeListener('follow-up-capture', handler);
+  },
+
+  getStealthMode: () => ipcRenderer.invoke('get-stealth-mode'),
+  setStealthMode: (enabled) => ipcRenderer.invoke('set-stealth-mode', { enabled }),
+  onStealthModeChange: (fn) => {
+    const handler = (_, payload) => fn(payload);
+    ipcRenderer.on('stealth-mode-changed', handler);
+    return () => ipcRenderer.removeListener('stealth-mode-changed', handler);
   }
 });

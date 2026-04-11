@@ -81,6 +81,19 @@ function setOpenAiModel(model) {
   return value;
 }
 
+function getStealthMode() {
+  const settings = readJsonSafe(SETTINGS_PATH, {});
+  return Boolean(settings.stealthMode);
+}
+
+function setStealthMode(enabled) {
+  const value = Boolean(enabled);
+  const settings = readJsonSafe(SETTINGS_PATH, {});
+  settings.stealthMode = value;
+  writeJsonSafe(SETTINGS_PATH, settings);
+  return value;
+}
+
 function getOpenAiKey() {
   const env = (process.env.OPENAI_API_KEY || '').trim();
   if (env) return env;
@@ -271,6 +284,8 @@ module.exports = {
   setModelMode,
   getOpenAiModel,
   setOpenAiModel,
+  getStealthMode,
+  setStealthMode,
   getPrompt,
   requestAi
 };
