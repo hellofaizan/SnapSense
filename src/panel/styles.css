@@ -435,6 +435,78 @@ body {
   display: block;
 }
 
+.openai-key-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--ss-surface);
+  border-bottom: 1px solid var(--border);
+  -webkit-app-region: no-drag;
+  font-size: 12px;
+}
+
+.openai-key-bar[hidden] {
+  display: none !important;
+}
+
+.openai-key-label {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.openai-key-bar .openai-key-input,
+.openai-key-bar .openai-model-input {
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--ss-surface-raised);
+  border: 1px solid var(--ss-border);
+  border-radius: var(--radius-control);
+  padding: 7px 10px;
+  min-width: 0;
+  color-scheme: dark;
+}
+
+.openai-key-bar .openai-key-input {
+  flex: 1 1 140px;
+}
+
+.openai-key-bar .openai-model-input {
+  flex: 1 1 120px;
+}
+
+.openai-key-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.openai-key-save {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-control);
+  padding: 7px 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.openai-key-save:hover {
+  background: var(--accent-hover);
+}
+
+.openai-key-hint {
+  color: var(--caption);
+  font-size: 11px;
+  line-height: 1.35;
+  width: 100%;
+}
+
 .preview {
   max-height: 140px;
   overflow: hidden;

@@ -25,6 +25,10 @@ const lensLoadingEl = document.getElementById('lens-loading');
 const lensErrorEl = document.getElementById('lens-error');
 const modelModeSelect = document.getElementById('ai-model-mode');
 const modelSelectWrap = document.querySelector('.model-select-wrap');
+const openaiKeyBar = document.getElementById('openai-key-bar');
+const openaiApiKeyInput = document.getElementById('openai-api-key');
+const openaiModelIdInput = document.getElementById('openai-model-id');
+const openaiKeySaveBtn = document.getElementById('openai-key-save');
 
 let imageDataUrl = '';
 let messages = [];
@@ -194,13 +198,25 @@ function setTyping(on) {
   typingEl.hidden = !on;
 }
 
+function updateOpenAiBarVisibility() {
+  if (!openaiKeyBar || !appWrap) return;
+  const aiMode = appWrap.dataset.mode === 'ai';
+  const openai = modelModeSelect && modelModeSelect.value === 'openai';
+  openaiKeyBar.hidden = !(aiMode && openai);
+}
+
 async function syncModelSelectFromMain() {
   if (!modelModeSelect) return;
   try {
-    const { mode } = await window.snapsense.getModelMode();
-    if (mode === 'groq' || mode === 'test') {
+    const r = await window.snapsense.getModelMode();
+    const mode = r?.mode || 'groq';
+    if (mode === 'groq' || mode === 'openai') {
       modelModeSelect.value = mode;
     }
+    if (openaiModelIdInput && typeof r?.openaiModel === 'string') {
+      openaiModelIdInput.value = r.openaiModel;
+    }
+    updateOpenAiBarVisibility();
   } catch {
     /* ignore */
   }
@@ -208,14 +224,15 @@ async function syncModelSelectFromMain() {
 
 async function refreshApiBanner() {
   try {
-    const { mode } = await window.snapsense.getModelMode();
-    if (mode === 'test') {
+    const r = await window.snapsense.getModelMode();
+    const mode = r?.mode || 'groq';
+    if (mode !== 'openai') {
       bannerEl.classList.remove('visible');
       return;
     }
     const s = await window.snapsense.getApiKeyStatus();
     if (s.isDummy || !s.configured) {
-      bannerEl.textContent = 'Groq API key is missing or invalid.';
+      bannerEl.textContent = 'OpenAI API key is missing or invalid.';
       bannerEl.classList.add('visible');
     } else {
       bannerEl.classList.remove('visible');
@@ -387,10 +404,10 @@ async function sendUserMessage(text) {
     await streamAssistantReply(reply);
   } catch (e) {
     clearAiLoadingSkeleton();
-    const msg =
-      e && e.message
-        ? e.message
-        : 'Something went wrong. Check your connection and API key.';
+      const msg =
+        e && e.message
+          ? e.message
+          : 'Something went wrong. Check your connection and API credentials.';
     appendBubble('assistant', msg, 'error');
     console.error('[SnapSense panel]', e);
   } finally {
@@ -418,6 +435,7 @@ function applyMode(mode) {
   if (m !== 'ai') {
     bannerEl.classList.remove('visible');
   }
+  updateOpenAiBarVisibility();
   return m;
 }
 
@@ -466,7 +484,7 @@ function onOpen(payload) {
       const msg =
         e && e.message
           ? e.message
-          : 'Could not reach the Groq API. Check your network and account limits.';
+          : 'Could not reach the AI API. Check your network and account limits.';
       appendBubble('assistant', msg, 'error');
       console.error('[SnapSense panel] initial', e);
     })
@@ -587,9 +605,43 @@ if (modelModeSelect) {
     const v = modelModeSelect.value;
     try {
       await window.snapsense.setModelMode(v);
+      updateOpenAiBarVisibility();
+      if (v === 'openai') {
+        try {
+          const r = await window.snapsense.getModelMode();
+          if (openaiModelIdInput && typeof r?.openaiModel === 'string') {
+            openaiModelIdInput.value = r.openaiModel;
+          }
+        } catch {
+          /* ignore */
+        }
+      }
       await refreshApiBanner();
     } catch (e) {
       console.error('[SnapSense panel] setModelMode', e);
+    }
+  });
+}
+
+if (openaiKeySaveBtn && openaiApiKeyInput) {
+  openaiKeySaveBtn.addEventListener('click', async () => {
+    try {
+      if (openaiModelIdInput) {
+        await window.snapsense.setOpenAiModel(openaiModelIdInput.value);
+      }
+      const typed = (openaiApiKeyInput.value || '').trim();
+      if (typed.length) {
+        const r = await window.snapsense.setOpenAiApiKey(typed);
+        if (r && r.ok === false && r.error) {
+          throw new Error(r.error);
+        }
+        openaiApiKeyInput.value = '';
+      }
+      await refreshApiBanner();
+    } catch (e) {
+      console.error('[SnapSense panel] save OpenAI key', e);
+      bannerEl.textContent = e?.message || 'Could not save API key.';
+      bannerEl.classList.add('visible');
     }
   });
 }

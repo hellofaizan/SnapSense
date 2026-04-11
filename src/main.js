@@ -16,7 +16,16 @@ const https = require('https');
 const path = require('path');
 const fs = require('fs');
 const log = require('./logger');
-const { getAiKeyStatus, getPrompt, requestAi, getModelMode, setModelMode } = require('./aiClient');
+const {
+  getAiKeyStatus,
+  getPrompt,
+  requestAi,
+  getModelMode,
+  setModelMode,
+  getOpenAiModel,
+  setOpenAiModel
+} = require('./aiClient');
+const { setOpenAiApiKey } = require('./secureCredentials');
 
 const CAPTURE_PRELOAD = path.join(__dirname, 'preload.js');
 const PANEL_PRELOAD = path.join(__dirname, 'preload.js');
@@ -965,9 +974,16 @@ function setupIpc() {
     return getAiKeyStatus();
   });
 
-  ipcMain.handle('get-model-mode', () => ({ mode: getModelMode() }));
+  ipcMain.handle('get-model-mode', () => ({
+    mode: getModelMode(),
+    openaiModel: getOpenAiModel()
+  }));
 
   ipcMain.handle('set-model-mode', (_evt, { mode }) => ({ mode: setModelMode(mode) }));
+
+  ipcMain.handle('set-openai-api-key', (_evt, { token }) => setOpenAiApiKey(token));
+
+  ipcMain.handle('set-openai-model', (_evt, { model }) => ({ model: setOpenAiModel(model) }));
 
   async function handleExtractText(imageDataUrl) {
     if (!imageDataUrl) {
@@ -986,7 +1002,7 @@ function setupIpc() {
         ]
       }
     ];
-    const out = await requestAi(messages, 2200, log, 'text');
+    const out = await requestAi(messages, 2200, log);
     if (out.error) {
       log.error('main', 'Text extraction via AI failed', { message: out.error });
       return { error: out.error };
@@ -1078,7 +1094,7 @@ function setupIpc() {
     const prompt = getPrompt('chat');
     const normalized = Array.isArray(messages) ? messages : [];
     const merged = prompt ? [{ role: 'system', content: prompt }, ...normalized] : normalized;
-    return requestAi(merged, 4096, log, 'chat');
+    return requestAi(merged, 4096, log);
   });
 
   ipcMain.on('capture-result', (_evt, payload) => {

@@ -305,3 +305,8 @@ PS C:\Users\sickb\Desktop\SnapSense> npm run dev
 - keep the change from grok model  to other things disabled for app
 - assume i have  kept the icon inside assets icon.pn
 - remove the tray icon and keep it same as icon.png
+
+
+lets add a feature it add custom model with api token, first add chatgpt model with custom api token and safe token store with encryption
+
+remove the test from the model list, also the groq api key i added to env, its like free token from us, just worry about the open ai api

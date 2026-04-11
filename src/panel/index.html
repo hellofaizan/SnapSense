@@ -36,7 +36,7 @@
             <span class="model-select-label">Model</span>
             <select id="ai-model-mode" aria-label="AI model">
               <option value="groq">Groq</option>
-              <option value="test">Test</option>
+              <option value="openai">OpenAI</option>
             </select>
           </label>
           <button type="button" id="btn-close" class="icon-btn ghost" aria-label="Close">
@@ -44,6 +44,30 @@
           </button>
         </div>
       </header>
+      <div id="openai-key-bar" class="openai-key-bar" hidden>
+        <div class="openai-key-row">
+          <label class="openai-key-label" for="openai-api-key">OpenAI API key</label>
+          <input
+            type="password"
+            id="openai-api-key"
+            class="openai-key-input"
+            placeholder="sk-…"
+            spellcheck="false"
+            autocomplete="off"
+          />
+          <input
+            type="text"
+            id="openai-model-id"
+            class="openai-model-input"
+            placeholder="Model (e.g. gpt-4o-mini)"
+            spellcheck="false"
+            autocomplete="off"
+            title="Vision-capable models work with screenshots"
+          />
+          <button type="button" id="openai-key-save" class="openai-key-save">Save</button>
+        </div>
+        <span class="openai-key-hint">Stored encrypted with the OS (DPAPI on Windows). Use a vision-capable model for screenshots.</span>
+      </div>
       <div id="banner" class="banner"></div>
       <div class="panel-body" id="section-ai">
         <div class="chat-scroll" id="chat"></div>

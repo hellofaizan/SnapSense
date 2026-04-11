@@ -47,5 +47,7 @@ contextBridge.exposeInMainWorld('snapsense', {
   getApiKeyStatus: () => ipcRenderer.invoke('get-api-key-status'),
   getModelMode: () => ipcRenderer.invoke('get-model-mode'),
   setModelMode: (mode) => ipcRenderer.invoke('set-model-mode', { mode }),
+  setOpenAiApiKey: (token) => ipcRenderer.invoke('set-openai-api-key', { token }),
+  setOpenAiModel: (model) => ipcRenderer.invoke('set-openai-model', { model }),
   closePanel: () => ipcRenderer.send('panel-close')
 });
