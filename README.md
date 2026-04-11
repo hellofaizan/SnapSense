@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/sickboydroid/SnapSense/releases/download/V1/SnapSense-Setup-0.1.0.exe">
-    <img src="assets/icon.svg" alt="SnapSense" width="160" height="160" />
+    <img src="assets/icon.png" alt="SnapSense" width="160" height="160" />
   </a>
 </p>
 
