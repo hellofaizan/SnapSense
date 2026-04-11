@@ -9,3 +9,25 @@
     @apply antialiased bg-black text-neutral-100;
   }
 }
+
+/* ── ShinyText shimmer sweep ────────────────────────────────────────────── */
+@keyframes shine {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+.animate-shine {
+  animation: shine linear infinite;
+}
+
+/* ── InfiniteMarquee scroll ─────────────────────────────────────────────── */
+@keyframes marquee-left {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes marquee-right {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.animate-marquee-left  { animation: marquee-left  linear infinite; }
+.animate-marquee-right { animation: marquee-right linear infinite; }
+

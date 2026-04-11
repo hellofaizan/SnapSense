@@ -1,5 +1,7 @@
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
+import MarqueeStrip from './components/MarqueeStrip'
+import StatsBar from './components/StatsBar'
 import ProjectIdea from './components/ProjectIdea'
 import Features from './components/Features'
 import HowItWorks from './components/HowItWorks'
@@ -13,6 +15,8 @@ export default function App() {
       <Navbar />
       <main>
         <Hero />
+        <MarqueeStrip />
+        <StatsBar />
         <ProjectIdea />
         <Features />
         <HowItWorks />

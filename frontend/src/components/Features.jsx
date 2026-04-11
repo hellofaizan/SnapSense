@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion'
 import {
   Brain,
   ClipboardCheck,
@@ -10,6 +9,8 @@ import {
 } from 'lucide-react'
 import Container from './Container'
 import { ScrollReveal } from './ScrollReveal'
+import TiltCard from './bits/TiltCard'
+import BlurText from './bits/BlurText'
 
 const quickCards = [
   {
@@ -61,16 +62,18 @@ export default function Features() {
         <ScrollReveal>
           <p className="text-center text-[12px] font-semibold uppercase tracking-[0.2em] text-blue-400/90">Features</p>
           <h2 className="mt-4 text-center text-3xl font-semibold tracking-tight text-neutral-100 md:text-[2rem]">
-            Bento-style product highlights
+            <BlurText text="Everything in one capture" delay={80} className="justify-center" />
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-center text-[15px] leading-relaxed text-neutral-400 md:text-[17px]">
-            Structured cards present the complete capture flow at a glance, from trigger speed to mode-specific output.
+            From trigger to answer in seconds — AI understanding, text extraction, and visual search all baked into one shortcut.
           </p>
         </ScrollReveal>
+
         <div className="mt-16 grid gap-4 lg:grid-cols-6">
-          <motion.article
-            whileHover={{ y: -2 }}
-            transition={{ duration: 0.2 }}
+          {/* Hero feature card */}
+          <TiltCard
+            maxTilt={6}
+            scale={1.01}
             className="rounded-2xl border border-white/15 bg-neutral-900/70 p-7 ring-1 ring-white/10 lg:col-span-4"
           >
             <div className="mb-5 inline-flex rounded-lg bg-blue-500/15 p-2 ring-1 ring-blue-500/25">
@@ -82,21 +85,18 @@ export default function Features() {
               the same panel with follow-up prompts instead of repeating capture cycles.
             </p>
             <div className="mt-7 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-[12px] text-neutral-300">
-                Code and stack traces
-              </div>
-              <div className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-[12px] text-neutral-300">
-                UI and layout analysis
-              </div>
-              <div className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-[12px] text-neutral-300">
-                Docs and text summaries
-              </div>
+              {['Code and stack traces', 'UI and layout analysis', 'Docs and text summaries'].map((tag) => (
+                <div key={tag} className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-[12px] text-neutral-300">
+                  {tag}
+                </div>
+              ))}
             </div>
-          </motion.article>
+          </TiltCard>
 
-          <motion.article
-            whileHover={{ y: -2 }}
-            transition={{ duration: 0.2 }}
+          {/* Speed card */}
+          <TiltCard
+            maxTilt={7}
+            scale={1.015}
             className="rounded-2xl border border-white/15 bg-neutral-900/70 p-6 ring-1 ring-white/10 lg:col-span-2"
           >
             <div className="mb-4 inline-flex rounded-lg bg-amber-500/15 p-2 ring-1 ring-amber-500/25">
@@ -108,23 +108,23 @@ export default function Features() {
             </p>
             <div className="mt-5 rounded-xl border border-blue-500/25 bg-blue-500/10 p-4">
               <p className="text-[11px] uppercase tracking-[0.18em] text-blue-300/90">Shortcut</p>
-              <p className="mt-2 text-[18px] font-semibold text-blue-100">Win + Alt + S</p>
+              <p className="mt-2 font-mono text-[18px] font-semibold text-blue-100">Win + Alt + S</p>
             </div>
-          </motion.article>
+          </TiltCard>
 
           {quickCards.map((f) => (
-            <motion.article
+            <TiltCard
               key={f.title}
-              whileHover={{ y: -2 }}
-              transition={{ duration: 0.2 }}
-              className={`group rounded-2xl border border-white/15 bg-neutral-900/70 p-6 ring-1 ring-white/10 ${f.span}`}
+              maxTilt={7}
+              scale={1.015}
+              className={`rounded-2xl border border-white/15 bg-neutral-900/70 p-6 ring-1 ring-white/10 ${f.span}`}
             >
               <div className={`mb-5 inline-flex rounded-lg p-2 ring-1 ${f.iconWrap}`}>
                 <f.icon className={`h-5 w-5 ${f.iconColor}`} strokeWidth={1.5} />
               </div>
               <h3 className="text-[17px] font-semibold text-neutral-100">{f.title}</h3>
               <p className="mt-2 text-[14px] leading-relaxed text-neutral-500">{f.desc}</p>
-            </motion.article>
+            </TiltCard>
           ))}
         </div>
       </Container>
