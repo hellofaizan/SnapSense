@@ -45,7 +45,7 @@ export default function Hero() {
 
             {/* ── Announcement badge ── */}
             <motion.a
-              href="https://github.com/sickboydroid/SnapSense/releases/latest"
+              href="https://github.com/hellofaizan/SnapSense/releases/latest"
               target="_blank"
               rel="noopener noreferrer"
               initial={{ opacity: 0, y: -10 }}
