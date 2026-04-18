@@ -10,7 +10,9 @@ const {
   desktopCapturer,
   session,
   shell,
-  clipboard
+  clipboard,
+  systemPreferences,
+  dialog
 } = require('electron');
 const https = require('https');
 const path = require('path');
@@ -66,6 +68,10 @@ function loadEnvFile() {
 loadEnvFile();
 
 const ASSETS_ROOT = path.join(__dirname, '..', 'assets');
+
+/** First successful globalShortcut accelerator for region capture (platform-specific). */
+let registeredCaptureAccelerator = null;
+let macScreenRecordingHelpShown = false;
 
 function logMissingUiAssets() {
   const interPath = path.join(ASSETS_ROOT, 'fonts', 'Inter.ttf');
@@ -665,7 +671,51 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function requestMacAccessibilityTrust() {
+  if (process.platform !== 'darwin') return;
+  try {
+    const trusted = systemPreferences.isTrustedAccessibilityClient(true);
+    log.info('main', 'macOS Accessibility (trusted client)', { trusted });
+  } catch (e) {
+    log.warn('main', 'isTrustedAccessibilityClient', { message: e?.message });
+  }
+}
+
+async function showMacScreenRecordingHelpOnce() {
+  if (macScreenRecordingHelpShown || process.platform !== 'darwin') return;
+  macScreenRecordingHelpShown = true;
+  const { response } = await dialog.showMessageBox({
+    type: 'warning',
+    title: 'Screen Recording required',
+    message: 'SnapSense could not read any displays.',
+    detail:
+      'On macOS, allow Screen Recording for SnapSense:\n\n' +
+      'System Settings → Privacy & Security → Screen Recording → enable SnapSense.\n\n' +
+      'Then quit SnapSense fully (menu bar → Quit) and open it again.',
+    buttons: ['Open Screen Recording settings', 'OK'],
+    defaultId: 0,
+    cancelId: 1
+  });
+  if (response === 0) {
+    try {
+      await shell.openExternal(
+        'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture'
+      );
+    } catch (e) {
+      log.warn('main', 'open Screen Recording prefs', { message: e?.message });
+    }
+  }
+}
+
 async function pickScreenSourceId() {
+  if (process.platform === 'darwin') {
+    try {
+      const screenStatus = systemPreferences.getMediaAccessStatus('screen');
+      log.info('main', 'macOS Screen Recording consent status', { screenStatus });
+    } catch (e) {
+      log.debug('main', 'getMediaAccessStatus(screen)', { message: e?.message });
+    }
+  }
   try {
     const primary = screen.getPrimaryDisplay();
     const sources = await desktopCapturer.getSources({
@@ -675,6 +725,9 @@ async function pickScreenSourceId() {
     });
     if (!sources.length) {
       log.error('main', 'No desktop capture sources');
+      if (process.platform === 'darwin') {
+        await showMacScreenRecordingHelpOnce();
+      }
       return null;
     }
     const match = sources.find((s) => String(s.display_id) === String(primary.id));
@@ -1080,16 +1133,54 @@ async function startCaptureFlow() {
   }
 }
 
+/**
+ * Global capture hotkey. On Windows/Linux we use Super+Alt+S (Win+Alt+S).
+ * On macOS use Command+Alt+S (⌘⌥S) explicitly — `Super+Alt+S` is unreliable in some Electron builds.
+ */
+function getCaptureAcceleratorCandidates() {
+  if (process.platform === 'darwin') {
+    return ['Command+Alt+S', 'Control+Alt+S', 'Super+Alt+S'];
+  }
+  return ['Super+Alt+S'];
+}
+
+function captureShortcutHint() {
+  if (process.platform === 'darwin') return '⌘⌥S';
+  if (process.platform === 'win32') return 'Win+Alt+S';
+  return 'Super+Alt+S';
+}
+
 function registerShortcut() {
-  const accel = 'Super+Alt+S';
-  const ok = globalShortcut.register(accel, () => {
-    log.info('main', 'Global shortcut', accel);
-    startCaptureFlow();
-  });
-  if (!ok) {
-    log.error('main', 'Failed to register shortcut', { accel });
-  } else {
-    log.info('main', 'Shortcut registered', { accel });
+  registeredCaptureAccelerator = null;
+  const candidates = getCaptureAcceleratorCandidates();
+  for (const accel of candidates) {
+    const ok = globalShortcut.register(accel, () => {
+      log.info('main', 'Global shortcut', { accel });
+      startCaptureFlow();
+    });
+    if (ok) {
+      registeredCaptureAccelerator = accel;
+      log.info('main', 'Shortcut registered', { accel });
+      if (tray && !tray.isDestroyed()) {
+        tray.setToolTip(`SnapSense — ${captureShortcutHint()} to capture`);
+      }
+      return;
+    }
+    log.warn('main', 'Shortcut registration failed, trying next', { accel });
+  }
+  log.error('main', 'All capture shortcut candidates failed', { candidates });
+  if (process.platform === 'darwin') {
+    dialog
+      .showMessageBox({
+        type: 'warning',
+        title: 'SnapSense',
+        message: 'Could not register the global capture shortcut.',
+        detail:
+          'Try: System Settings → Privacy & Security → Accessibility → enable SnapSense, then restart the app.\n\n' +
+          'You can still use the menu bar icon → Capture region.',
+        buttons: ['OK']
+      })
+      .catch(() => {});
   }
 }
 
@@ -1100,7 +1191,51 @@ function buildTray() {
     icon = nativeImage.createEmpty();
   }
   tray = new Tray(icon);
-  tray.setToolTip('SnapSense — Win+Alt+S to capture');
+  tray.setToolTip(`SnapSense — ${captureShortcutHint()} to capture`);
+
+  const installationSubmenu = [];
+  if (process.platform === 'darwin') {
+    installationSubmenu.push({
+      label: 'Show app in Finder',
+      click: () => {
+        try {
+          shell.showItemInFolder(app.getPath('exe'));
+        } catch (e) {
+          log.warn('main', 'showItemInFolder', { message: e?.message });
+        }
+      }
+    });
+  } else {
+    installationSubmenu.push({
+      label: 'Open install folder',
+      click: () => {
+        const dir = path.dirname(app.getPath('exe'));
+        shell.openPath(dir).then((errMsg) => {
+          if (errMsg) log.warn('main', 'openPath install folder', { err: errMsg });
+        });
+      }
+    });
+    if (process.platform === 'win32') {
+      installationSubmenu.push({
+        label: 'Open Start Menu (SnapSense)',
+        click: () => {
+          const programs = path.join(
+            process.env.APPDATA || '',
+            'Microsoft',
+            'Windows',
+            'Start Menu',
+            'Programs'
+          );
+          const category = path.join(programs, 'SnapSense');
+          const target = fs.existsSync(category) ? category : programs;
+          shell.openPath(target).then((errMsg) => {
+            if (errMsg) log.warn('main', 'openPath Start Menu', { err: errMsg });
+          });
+        }
+      });
+    }
+  }
+
   const menu = Menu.buildFromTemplate([
     {
       label: 'Capture region',
@@ -1108,34 +1243,7 @@ function buildTray() {
     },
     {
       label: 'Installation',
-      submenu: [
-        {
-          label: 'Open install folder',
-          click: () => {
-            const dir = path.dirname(app.getPath('exe'));
-            shell.openPath(dir).then((errMsg) => {
-              if (errMsg) log.warn('main', 'openPath install folder', { err: errMsg });
-            });
-          }
-        },
-        {
-          label: 'Open Start Menu (SnapSense)',
-          click: () => {
-            const programs = path.join(
-              process.env.APPDATA || '',
-              'Microsoft',
-              'Windows',
-              'Start Menu',
-              'Programs'
-            );
-            const category = path.join(programs, 'SnapSense');
-            const target = fs.existsSync(category) ? category : programs;
-            shell.openPath(target).then((errMsg) => {
-              if (errMsg) log.warn('main', 'openPath Start Menu', { err: errMsg });
-            });
-          }
-        }
-      ]
+      submenu: installationSubmenu
     },
     { type: 'separator' },
     {
@@ -1379,6 +1487,7 @@ app.whenReady().then(() => {
   });
   log.info('main', 'App ready', { version: app.getVersion() });
   logMissingUiAssets();
+  requestMacAccessibilityTrust();
   setupIpc();
   buildTray();
   registerShortcut();

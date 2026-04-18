@@ -31,6 +31,17 @@
 - **Node.js** 18+ for development and builds.
 - A **Groq API key** ([Groq Console](https://console.groq.com/)) for live AI (not needed for **Test** mode).
 
+### macOS (Apple Silicon DMG)
+
+| Topic | What to do |
+|--------|------------|
+| **Capture shortcut** | **⌘⌥S** — **Command + Option + S** (same idea as Win+Alt+S on Windows). The app registers this explicitly on macOS. |
+| **Gatekeeper / “damaged” app** | Unsigned builds: **Right‑click the app → Open** the first time, or allow in **System Settings → Privacy & Security**. |
+| **Screen Recording** | Required for `desktopCapturer`. Go to **System Settings → Privacy & Security → Screen Recording** and enable **SnapSense**, then **quit and reopen** the app. If the shortcut “does nothing” or capture never starts, this is usually the cause. |
+| **Accessibility** | If the global shortcut still never fires, enable **SnapSense** under **System Settings → Privacy & Security → Accessibility** (Electron may prompt when you first run the app). |
+| **Tray** | SnapSense lives in the **menu bar**. Use **Capture region** if the shortcut is blocked by another app. |
+| **Install location** | Prefer dragging **SnapSense.app** into **Applications** before running (more stable than running only from the DMG mount). |
+
 ---
 
 ## Quick start (development)
@@ -49,7 +60,7 @@ GROQ_KEY=your_groq_api_key_here
 npm run dev
 ```
 
-The app runs in the system tray. Use the shortcut shown in the app (e.g. **Win + Alt + S** on Windows) to start a capture.
+The app runs in the system tray / menu bar. Use the shortcut (**Win + Alt + S** on Windows, **⌘ + Option + S** on macOS) or the tray menu → **Capture region**.
 
 ---
 
